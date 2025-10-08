@@ -1,7 +1,6 @@
 #include "TFile.h"
 #include "TTree.h"
-#include "TG4Event.h"
-
+#include "/home/lmlepin/edepsim_workdir/edep-sim/install/include/EDepSim/TG4Event.h"
 #include <vector>
 #include <cstdio> 
 
@@ -81,10 +80,9 @@ double getProductionTime_PNS(double pulse_width) {
 
 int create_neutron_pulses(std::string input_file, 
                           int spillFileId, 
-                          double PULSE_PERIOD, 
+                          double PULSE_WIDTH, 
                           double ACC_VOLTAGE,
                           double CURRENT,
-                          double FREQUENCY,
                           double DUTY_FACTOR,
                           std::string output_file="2x2_DTG_edepsim_rectified_spill.root"){
 
@@ -96,7 +94,7 @@ int create_neutron_pulses(std::string input_file,
     Args:
         input_file: path to your input edep-sim file
         spillFileId: index of the input file 
-        PULSE_PERIOD: Desired pulse period (ns)
+        PULSE_WIDTH: Desired pulse width in s
         ACC_VOLTAGE: Acceleration voltage at tritium target (kV)
         CURRENT: deuterium current value (uA)
         FREQUENCY: Number of pulses per second (hz)
@@ -114,14 +112,17 @@ int create_neutron_pulses(std::string input_file,
     std::cout << "======================================================" << std::endl;
     printf("Creating neutron pulses with the following settings:\n");
     double NEUTRON_YIELD = DTG_neutron_yield_calculator(ACC_VOLTAGE, CURRENT);
-    double PULSE_WIDTH = 1.*DUTY_FACTOR/FREQUENCY;
+    double FREQUENCY = 1.*DUTY_FACTOR/PULSE_WIDTH;
+    double TIME_BETWEEN_PULSES = (1 - DUTY_FACTOR)/(FREQUENCY - 1);
+    double PULSE_PERIOD = 1.2; // Fixed 1.2s
 
-    printf("Dutyy factor %.3f \n", DUTY_FACTOR);
-    printf("Pulse width: %.1e ns\n", PULSE_WIDTH);
-    printf("Pulse period: %.1f s\n", PULSE_PERIOD);
+    printf("Duty factor %.3f \n", DUTY_FACTOR);
+    printf("Pulse width: %.1e us\n", PULSE_WIDTH*1e6);
+    printf("Time between pulses: %.1f us\n", TIME_BETWEEN_PULSES*1e6);
+    printf("Forced time bt pulses %.1f s \n", PULSE_PERIOD);
     printf("Frequency: %1.f hz \n", FREQUENCY);
-    printf("Neutron yield: %.1e n/s\n", NEUTRON_YIELD);
-    printf("Neutrons per pulse: %.1f \n", std::floor(NEUTRON_YIELD/FREQUENCY));
+    printf("Calculated neutron yield: %.1e n/s\n", NEUTRON_YIELD);
+    printf("Average number of neutrons per pulse: %.1f \n", std::floor(NEUTRON_YIELD/FREQUENCY));
 
     double T_PULSES=100; // number of equivalent pulses  
     double N_PULSES=1; // Number of pulses to simulate
@@ -138,7 +139,6 @@ int create_neutron_pulses(std::string input_file,
       std::cout << "Not enough neutrons to create at least one pulse..." << std::endl;
       return 1;
     }
-
 
 
 
@@ -161,9 +161,13 @@ int create_neutron_pulses(std::string input_file,
 
 
     int ipulse=1;
+    bool debug_pulse=true;
     while(true){
 
+        if(debug_pulse && ipulse == 3){break;}
+
         // Include 25% uncerainty on neutron yield
+        // If nevets_this_pulse 0, try again (?)
         int Nevts_this_pulse = gRandom->Gaus(evts_per_pulse,evts_per_pulse*0.25);
 
         // Create a vector of size #neutrons in this pulse 
@@ -177,10 +181,15 @@ int create_neutron_pulses(std::string input_file,
                   times.end(),
                   [](const auto& lhs, const auto& rhs) { return lhs.time < rhs.time; });
 
+
+        // We finish if we ran out of neutrons...
+
         if(evt_out + Nevts_this_pulse >  nEntries){
             break;
         }
         std::cout << "Pulse: " << ipulse << ", Number of neutrons: " << Nevts_this_pulse << std::endl;
+        double this_pulse_time = (1e9)*PULSE_PERIOD*(ipulse); // in ns 
+        std::cout << "This pulse time: " << this_pulse_time*1e-9 << " s" << std::endl;
         // Iterate over the number of neutrons in this pulse
         for (const auto& ttime : times) {
             events->GetEntry(evt_out);
@@ -199,14 +208,10 @@ int create_neutron_pulses(std::string input_file,
               throw;
             }
         
-            // We don't start at zero to not crash nd-flow charge2light 
-            double event_time = ttime.time + (1e9)*PULSE_PERIOD*(ipulse);
+            // We don't start at zero to not crash nd-flow charge2light
+            double event_time = ttime.time + this_pulse_time;
             double old_event_time = 0.;
-            std::cout << "This neutron time: " << event_time << std::endl;
-
-
-
-
+            std::cout << "This neutron time w.r.t pulse time: " << ttime.time*1e6 << " us"  << std::endl;
 
             // ... interaction vertex
             for (std::vector<TG4PrimaryVertex>::iterator v = event->Primaries.begin(); v != event->Primaries.end(); ++v) {;
