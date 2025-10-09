@@ -46,7 +46,7 @@
 
 
 # Position inside module 0 
-/gps/pos/centre 0.2 0.0 0.3 m
+/gps/pos/centre -0.2 0.0 0.3 m
 
 # Isotropic neutron dist 
 /gps/ang/type iso 
