@@ -1,6 +1,7 @@
 #include "TFile.h"
 #include "TTree.h"
-#include "/home/lmlepin/edepsim_workdir/edep-sim/install/include/EDepSim/TG4Event.h"
+#include "TG4Event.h"
+
 #include <vector>
 #include <cstdio> 
 
@@ -161,10 +162,10 @@ int create_neutron_pulses(std::string input_file,
 
 
     int ipulse=1;
-    bool debug_pulse=true;
+    bool debug_pulse=false;
     while(true){
 
-        if(debug_pulse && ipulse == 3){break;}
+        if(debug_pulse && ipulse == 10){break;}
 
         // Include 25% uncerainty on neutron yield
         // If nevets_this_pulse 0, try again (?)
@@ -209,9 +210,9 @@ int create_neutron_pulses(std::string input_file,
             }
         
             // We don't start at zero to not crash nd-flow charge2light
-            double event_time = ttime.time + this_pulse_time;
+            double event_time = ttime.time*1e9 + this_pulse_time; // Align times in ns
             double old_event_time = 0.;
-            std::cout << "This neutron time w.r.t pulse time: " << ttime.time*1e6 << " us"  << std::endl;
+            std::cout << "This neutron (" << evt_out << " " << event->EventId << ") time w.r.t pulse time: " << ttime.time*1e6 << " us"  << std::endl;
 
             // ... interaction vertex
             for (std::vector<TG4PrimaryVertex>::iterator v = event->Primaries.begin(); v != event->Primaries.end(); ++v) {;
