@@ -62,7 +62,7 @@ def get_ancestry(this_traj_id, ev_traj):
                 process = 1
 
             break  # break once we hit a parent neutron
-        elif ((p['parent_id']==-1) and 2112 not in ancestry):
+        elif ((p['parent_id']==-1) and p['pdg_id']!=2112):
             process=2
             break # break if we hit a primary particle, this is a non-neutron trajectory
         current = p['parent_id']
