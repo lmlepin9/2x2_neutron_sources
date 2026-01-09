@@ -2,4 +2,5 @@
 *.hdf5
 *.out
 *.png
-*.pdf 
+*.pdf
+__pycache__/
