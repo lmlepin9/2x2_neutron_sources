@@ -3,4 +3,6 @@
 *.out
 *.png
 *.pdf
+*.log
+*.csv
 __pycache__/
