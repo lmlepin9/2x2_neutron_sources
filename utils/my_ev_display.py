@@ -1,8 +1,7 @@
 import plotly.graph_objects as go
 
 
-
-def event_display(hits_set):
+def event_display(hits_set, cluster_label=[], E=[]):
 
     hits_x = hits_set[:,0]
     hits_y = hits_set[:,1]
@@ -21,21 +20,72 @@ def event_display(hits_set):
     # --------------------------------------------------
     # Create event display
     # --------------------------------------------------
+    symbol_li = ['circle', 'circle-open', 'cross', 'diamond', 'diamond-open', 'square', 'square-open', 'x']
     fig = go.Figure()
 
-    # --- Add hit points colored by time ---
-    fig.add_trace(go.Scatter3d(
-        x=hits_x, y=hits_y, z=hits_z,
-        mode='markers',
-        marker=dict(
-            size=4,
-            color=hits_c,             # <-- color by time
-            colorscale='Turbo',      # 'Viridis', 'Plasma', 'Turbo', etc.
-            colorbar=dict(title="Time"),
-            opacity=0.9
-        ),
-        name="Hits"
-    ))
+    if not len(E):
+        if not len(cluster_label):
+            # --- Add hit points colored by time ---
+            fig.add_trace(go.Scatter3d(
+                x=hits_x, y=hits_y, z=hits_z,
+                mode='markers',
+                marker=dict(
+                    size=4,
+                    color=hits_c,             # <-- color by time
+                    colorscale='Turbo',      # 'Viridis', 'Plasma', 'Turbo', etc.
+                    colorbar=dict(title="Time"),
+                    opacity=0.9
+                ),
+                name="Hits"
+            ))
+        else:
+            # --- Add hit points with different labels for different clusters and colored by time ---
+            for index,i in enumerate(set(cluster_label)):
+                fig.add_trace(go.Scatter3d(
+                    x=hits_x[cluster_label==i], y=hits_y[cluster_label==i], z=hits_z[cluster_label==i],
+                    mode='markers',
+                    marker=dict(
+                        size=4,
+                        color=hits_c[cluster_label==i],             # <-- color by time
+                        colorscale='Turbo',      # 'Viridis', 'Plasma', 'Turbo', etc.
+                        colorbar=dict(title="Time"),
+                        opacity=0.9,
+                        symbol=symbol_li[index%len(set(symbol_li))],
+                        name=f"Cluster Label: {i}"
+                    ),
+                    name=f'Cluster Label: {i}'
+                ))
+    elif len(E):
+        if not len(cluster_label):
+            # --- Add hit points colored by energy ---
+            fig.add_trace(go.Scatter3d(
+                x=hits_x, y=hits_y, z=hits_z,
+                mode='markers',
+                marker=dict(
+                    size=4,
+                    color=E,             # <-- color by time
+                    colorscale='Viridis',      # 'Viridis', 'Plasma', 'Turbo', etc.
+                    colorbar=dict(title="Energy (MeV)"),
+                    opacity=0.9
+                ),
+                name="Hits"
+            ))
+        else:
+            # --- Add hit points with different labels for different clusters and colored by energy ---
+            for index,i in enumerate(set(cluster_label)):
+                fig.add_trace(go.Scatter3d(
+                    x=hits_x[cluster_label==i], y=hits_y[cluster_label==i], z=hits_z[cluster_label==i],
+                    mode='markers',
+                    marker=dict(
+                        size=4,
+                        color=E,             # <-- color by time
+                        colorscale='Viridis',      # 'Viridis', 'Plasma', 'Turbo', etc.
+                        colorbar=dict(title="Energy (MeV)"),
+                        opacity=0.9,
+                        symbol=symbol_li[index%len(set(symbol_li))]
+                    ),
+                    name=f'Cluster Label: {i}'
+                ))
 
     # --------------------------------------------------
     # Add detector cube edges
@@ -208,9 +258,16 @@ def event_display(hits_set):
             zaxis=dict(title='z [cm]', range=[Lmin, Lmax]),
             aspectmode='cube'
         ),
+        scene_camera=dict(
+        up=dict(x=0, y=1, z=0),  # Defines which direction is 'up', in this case it should be y
+        ),
         width=800,
         height=800,
-        title="2x2 Event Display"
+        title="2x2 Event Display",
+        legend=dict(
+            xanchor='left',
+            yanchor='bottom'
+        )
     )
 
     fig.show()
