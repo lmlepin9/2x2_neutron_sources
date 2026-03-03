@@ -115,18 +115,18 @@ def CL_AmBe_analysis(input_file,file_id,input_config):
     #for icharge in range(2):
         test_event_hits = non_zero_charge_hits[:,0][icharge][0:non_zero_charge_events.data['nhit'][:,0][icharge]]
         this_event_light_id = non_zero_charge_light_ev['id'][icharge]
-        hits_stack_unfiltered = np.column_stack((test_event_hits.data['x'],test_event_hits.data['y'],test_event_hits.data['z'],test_event_hits.data['E'],np.ones(len(test_event_hits))*this_event_light_id))
+        hits_stack_unfiltered = np.column_stack((test_event_hits.data['x'],test_event_hits.data['y'],test_event_hits.data['z'],test_event_hits.data['E'],test_event_hits.data['Q'],np.ones(len(test_event_hits))*this_event_light_id))
         hits_stack = filter_hits(hits_stack_unfiltered)
         if(len(hits_stack)==0):
             continue
         labels = db.fit_predict(hits_stack[:,:3])
-        hits_stack_label = np.column_stack((hits_stack[:,0],hits_stack[:,1],hits_stack[:,2],hits_stack[:,3],np.ones(len(hits_stack))*int(this_event_light_id),labels,np.ones(len(hits_stack))*int(file_id)))
+        hits_stack_label = np.column_stack((hits_stack[:,0],hits_stack[:,1],hits_stack[:,2],hits_stack[:,3],hits_stack[:,4],np.ones(len(hits_stack))*int(this_event_light_id),labels,np.ones(len(hits_stack))*int(file_id)))
         clusterized_hits.extend(hits_stack_label.tolist())
         temp_n_clusters = 0
 
         for l in np.unique(labels):
             if(l!=-1):
-                this_l_hits = hits_stack_label[hits_stack_label[:,5]==l]
+                this_l_hits = hits_stack_label[hits_stack_label[:,6]==l]
                 n_hits_clusters.append(len(this_l_hits))
                 E_clusters.append(np.sum(this_l_hits[:,3]))
                 cluster_light_ev_id.append([l,this_event_light_id])
@@ -178,11 +178,12 @@ for ifile in np.unique(all_clusters_array[:,6]):
 
 
 print(f"\nSaving clusters to a csv file: {out_clusters}")
-df = pd.DataFrame(all_clusters_array, columns=[f"c{i}" for i in range(7)])
+df = pd.DataFrame(all_clusters_array, columns=['x', 'y', 'z', 'E', 'Q', 'light_id', 'cluster_label', 'file_id'])
+
 df["id"] = (
-    df["c6"].astype(str)
-    + "::" + df["c4"].astype(str)
-    + "::" + df["c5"].astype(str)
+    df["file_id"].astype(str)
+    + "::" + df["light_id"].astype(str)
+    + "::" + df["cluster_label"].astype(str)
 )
 
 df.to_csv(out_clusters)
