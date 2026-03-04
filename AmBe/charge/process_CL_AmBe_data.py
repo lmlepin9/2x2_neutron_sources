@@ -25,11 +25,11 @@ from light.PMT_analysis_utils import *
 repo_root = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
 sys.path.append(repo_root)
 
-from utils.backtracking import get_charge_event_hits, hit_backtracker, get_ancestry # Now this works
-from utils.my_ev_display import event_display
+import utils.cluster_tools as cltools
+
 
 # Configure your analysis here 
-DEBUG=True
+DEBUG=False
 input_dataset = "/global/cfs/cdirs/dune/users/lmlepin/neutron_source_CL_data/source_ambe_bin3/one_pmt_trig_no_source/"
 #input_dataset = "/pscratch/sd/d/dunepro/mkramer/output/Reflow_2x2_Run2_v0p2/flow/source_ambe_bin2/one_trig_32us_window"
 #input_dataset = "/global/cfs/cdirs/dune/www/data/2x2/reflows_run2/v0/flow/ColdOperations/data/2025_Operations_Cold/source/AmBe_1112"
@@ -59,13 +59,6 @@ job_config = {
 }
 
 #-------------------------------------------------------------------------------------------------------------------------------------- 
-
-def filter_hits(hits_set):
-    # Remove hits with negative energy
-    hits_set = hits_set[hits_set[:,3] > 0.]
-    # Remove hits with any NaN field
-    hits_set = hits_set[~np.isnan(hits_set).any(axis=1)]
-    return hits_set 
 
 
 def CL_AmBe_analysis(input_file,file_id,input_config):
@@ -126,7 +119,7 @@ def CL_AmBe_analysis(input_file,file_id,input_config):
         test_event_hits = non_zero_charge_hits[:,0][icharge][0:non_zero_charge_events.data['nhit'][:,0][icharge]]
         this_event_light_id = non_zero_charge_light_ev['id'][icharge]
         hits_stack_unfiltered = np.column_stack((test_event_hits.data['x'],test_event_hits.data['y'],test_event_hits.data['z'],test_event_hits.data['E'],test_event_hits.data['Q'],np.ones(len(test_event_hits))*this_event_light_id))
-        hits_stack = filter_hits(hits_stack_unfiltered)
+        hits_stack = cltools.filter_hits(hits_stack_unfiltered)
         if(len(hits_stack)==0):
             continue
         labels = db.fit_predict(hits_stack[:,:3])
@@ -167,17 +160,17 @@ for file_count, ifile in enumerate(file_list):
     this_file = os.path.join(input_dataset, ifile)
     print(this_file)
 
-    #try:
-    temp_out = CL_AmBe_analysis(
-            this_file,
-            file_count,
-            job_config
-    )
-    all_clusters.extend(temp_out["clusters"])
+    try:
+        temp_out = CL_AmBe_analysis(
+                this_file,
+                file_count,
+                job_config
+        )
+        all_clusters.extend(temp_out["clusters"])
 
-    #except Exception as e:
-    #    print(f"[WARNING] Failed processing {this_file}: {e}")
-    #    continue
+    except Exception as e:
+       print(f"[WARNING] Failed processing {this_file}: {e}")
+       continue
 
 
 print("\n Showing amount of clusters per file:")
@@ -186,14 +179,6 @@ for ifile in np.unique(all_clusters_array[:,7]):
     print(f"Dimensions of file {ifile} {all_clusters_array[all_clusters_array[:,7]==ifile].shape}")
 
 
-print(f"\nSaving clusters to a csv file: {out_clusters}")
-df = pd.DataFrame(all_clusters_array, columns=['x', 'y', 'z', 'E', 'Q', 'light_id', 'cluster_label', 'file_id'])
-
-df["id"] = (
-    df["file_id"].astype(str)
-    + "::" + df["light_id"].astype(str)
-    + "::" + df["cluster_label"].astype(str)
-)
-
-df.to_csv(out_clusters)
+# Save to csv
+cltools.save_to_csv(all_clusters_array,out_clusters)
 print("\nThis script has finished successfully, happy analysis!") 
