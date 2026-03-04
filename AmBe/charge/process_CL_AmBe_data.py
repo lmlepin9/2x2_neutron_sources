@@ -28,17 +28,27 @@ sys.path.append(repo_root)
 from utils.backtracking import get_charge_event_hits, hit_backtracker, get_ancestry # Now this works
 from utils.my_ev_display import event_display
 
-DEBUG=True
-
 # Configure your analysis here 
-
-input_dataset = "/pscratch/sd/d/dunepro/mkramer/output/Reflow_2x2_Run2_v0p2/flow/source_ambe_bin3/one_pmt_trig_no_source"
+DEBUG=True
+input_dataset = "/global/cfs/cdirs/dune/users/lmlepin/neutron_source_CL_data/source_ambe_bin3/one_pmt_trig_no_source/"
 #input_dataset = "/pscratch/sd/d/dunepro/mkramer/output/Reflow_2x2_Run2_v0p2/flow/source_ambe_bin2/one_trig_32us_window"
 #input_dataset = "/global/cfs/cdirs/dune/www/data/2x2/reflows_run2/v0/flow/ColdOperations/data/2025_Operations_Cold/source/AmBe_1112"
 #input_dataset = "/pscratch/sd/d/dunepro/mkramer/output/Reflow_2x2_Run2_v0p2/flow/source_ambe_bin0/mod2_pmt_trig"
 #input_dataset =  "/pscratch/sd/d/dunepro/mkramer/output/Reflow_2x2_Run2_v0p2/flow/source_ambe_bin3/two_trig_109us_period"
 #input_dataset = "/pscratch/sd/d/dunepro/mkramer/output/Reflow_2x2_Run2_v0p2/flow/source_ambe_bin4/two_trig_320us_period"
-out_clusters = "../output/source_one_pmt_trig_no_source_clusters.csv"
+out_directory = "/pscratch/sd/l/lmlepin/cluster_outputs"
+# Create the directory
+try:
+    os.mkdir(out_directory)
+    print(f"Directory '{out_directory}' created successfully.")
+except FileExistsError:
+    print(f"Directory '{out_directory}' already exists.")
+except PermissionError:
+    print(f"Permission denied: Unable to create '{out_directory}'.")
+except Exception as e:
+    print(f"An error occurred: {e}")
+
+out_clusters = f"{out_directory}/source_one_pmt_trig_no_source_clusters.csv"
 
 job_config = {
     "DEBUG":False,
@@ -110,7 +120,7 @@ def CL_AmBe_analysis(input_file,file_id,input_config):
 
     clusterized_hits = [] 
     print(f"Number of non-zero charge events to be processed {len(non_zero_charge_events)}")
-    db = DBSCAN(eps=3,min_samples=2)
+    db = DBSCAN(eps=3,min_samples=1)
     for icharge in range(len(non_zero_charge_events)):
     #for icharge in range(2):
         test_event_hits = non_zero_charge_hits[:,0][icharge][0:non_zero_charge_events.data['nhit'][:,0][icharge]]
@@ -126,7 +136,7 @@ def CL_AmBe_analysis(input_file,file_id,input_config):
 
         for l in np.unique(labels):
             if(l!=-1):
-                this_l_hits = hits_stack_label[hits_stack_label[:,6]==l]
+                this_l_hits = hits_stack_label[hits_stack_label[:,7]==l]
                 n_hits_clusters.append(len(this_l_hits))
                 E_clusters.append(np.sum(this_l_hits[:,3]))
                 cluster_light_ev_id.append([l,this_event_light_id])
@@ -139,7 +149,6 @@ def CL_AmBe_analysis(input_file,file_id,input_config):
 
 
     return out_dataset
-
 
 
 all_clusters = []
@@ -158,23 +167,23 @@ for file_count, ifile in enumerate(file_list):
     this_file = os.path.join(input_dataset, ifile)
     print(this_file)
 
-    try:
-        temp_out = CL_AmBe_analysis(
+    #try:
+    temp_out = CL_AmBe_analysis(
             this_file,
             file_count,
             job_config
-        )
-        all_clusters.extend(temp_out["clusters"])
+    )
+    all_clusters.extend(temp_out["clusters"])
 
-    except Exception as e:
-        print(f"[WARNING] Failed processing {this_file}: {e}")
-        continue
+    #except Exception as e:
+    #    print(f"[WARNING] Failed processing {this_file}: {e}")
+    #    continue
 
 
 print("\n Showing amount of clusters per file:")
 all_clusters_array = np.array(all_clusters)
-for ifile in np.unique(all_clusters_array[:,6]):
-    print(f"Dimensions of file {ifile} {all_clusters_array[all_clusters_array[:,6]==ifile].shape}")
+for ifile in np.unique(all_clusters_array[:,7]):
+    print(f"Dimensions of file {ifile} {all_clusters_array[all_clusters_array[:,7]==ifile].shape}")
 
 
 print(f"\nSaving clusters to a csv file: {out_clusters}")
