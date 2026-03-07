@@ -5,7 +5,7 @@ import numpy as np
 from scipy.stats import norm
 import os 
 
-plt.style.use('../../utils/dune.mplstyle')
+plt.style.use(f"{os.environ['REPO_DIR']}/utils/dune.mplstyle")
 
 def min_range_baseline(array, segment_size=25, num_segments=40, num_means=4):
 
