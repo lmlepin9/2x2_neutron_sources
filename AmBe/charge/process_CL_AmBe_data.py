@@ -1,76 +1,38 @@
 import h5py as h5 
-
-import matplotlib.pyplot as plt
-from matplotlib import cm, colors
-import matplotlib.patches as mpatches
-from matplotlib.colors import BoundaryNorm
-from matplotlib import colors, ticker
-
 import numpy as np
 import os, sys
 import traceback
 import pandas as pd
-
+import argparse
 import h5flow 
-plt.style.use('../../utils/dune.mplstyle')
 from sklearn.cluster import DBSCAN 
 
 # Path to repo root (two directories above notebook)
-light_root = os.path.abspath(os.path.join(os.getcwd(), ".."))
+light_root = os.path.abspath(f"{os.environ['REPO_DIR']}/AmBe")
 sys.path.append(light_root)
 
 from light.PMT_analysis_utils import * 
 
 # Path to repo root (two directories above notebook)
-repo_root = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
+repo_root = os.path.abspath(os.environ['REPO_DIR'])
 sys.path.append(repo_root)
 
 import utils.cluster_tools as cltools
 
 
-# Configure your analysis here 
-DEBUG=False
-input_dataset = "/global/cfs/cdirs/dune/users/lmlepin/neutron_source_CL_data/source_ambe_bin3/one_pmt_trig_no_source/"
-#input_dataset = "/pscratch/sd/d/dunepro/mkramer/output/Reflow_2x2_Run2_v0p2/flow/source_ambe_bin2/one_trig_32us_window"
-#input_dataset = "/global/cfs/cdirs/dune/www/data/2x2/reflows_run2/v0/flow/ColdOperations/data/2025_Operations_Cold/source/AmBe_1112"
-#input_dataset = "/pscratch/sd/d/dunepro/mkramer/output/Reflow_2x2_Run2_v0p2/flow/source_ambe_bin0/mod2_pmt_trig"
-#input_dataset =  "/pscratch/sd/d/dunepro/mkramer/output/Reflow_2x2_Run2_v0p2/flow/source_ambe_bin3/two_trig_109us_period"
-#input_dataset = "/pscratch/sd/d/dunepro/mkramer/output/Reflow_2x2_Run2_v0p2/flow/source_ambe_bin4/two_trig_320us_period"
-out_directory = "/pscratch/sd/l/lmlepin/cluster_outputs"
-# Create the directory
-try:
-    os.mkdir(out_directory)
-    print(f"Directory '{out_directory}' created successfully.")
-except FileExistsError:
-    print(f"Directory '{out_directory}' already exists.")
-except PermissionError:
-    print(f"Permission denied: Unable to create '{out_directory}'.")
-except Exception as e:
-    print(f"An error occurred: {e}")
 
-out_clusters = f"{out_directory}/source_one_pmt_trig_no_source_clusters.csv"
+def CL_AmBe_analysis(input_file,file_id,single,use_trigger,period,is_debug=False):
 
-job_config = {
-    "DEBUG":False,
-    "SINGLE":True,
-    "PMT_trigger":False,
-    "PERIOD":320
+    use_trigger = bool(use_trigger)
+    single = bool(single)
 
-}
-
-#-------------------------------------------------------------------------------------------------------------------------------------- 
-
-
-def CL_AmBe_analysis(input_file,file_id,input_config):
-
-    is_debug=input_config["DEBUG"]
-    single=input_config["SINGLE"]
-    use_trigger=input_config["PMT_trigger"]
-    period=input_config["PERIOD"]
+    print(f"Use trigger?: {use_trigger}")
+    print(f"Single trigger?: {single}")
 
     h5_file = h5flow.data.H5FlowDataManager(input_file,'r')
     g_triggers = None
     b_triggers = None
+
 
     # Initialize output dataset 
     out_dataset = {
@@ -144,41 +106,99 @@ def CL_AmBe_analysis(input_file,file_id,input_config):
     return out_dataset
 
 
-all_clusters = []
-print("Starting file processing...")
+if __name__ == "__main__":
+    print("Running AmBe CR cluster tool")
+    parser = argparse.ArgumentParser()
 
-# Filter out .json files 
-file_list = os.listdir(input_dataset)
-file_list = [f for f in file_list if not f.endswith(".json")]
+    parser.add_argument(
+        "--input",
+        nargs=1,
+        required=True,  
+        help="directory with input files"
+    )
 
-for file_count, ifile in enumerate(file_list):
+    parser.add_argument(
+        "--out",
+        nargs=1,
+        required=True,
+        help="output csv file"
+    )
 
-    # Run over 10% of the dataset
-    if DEBUG and file_count >= 5:
-        break
+    parser.add_argument(
+        "--trig",
+        nargs=1,
+        default=True,
+        type=int,
+        help="indicates if the PMT trigger has to be used"
+    )
 
-    this_file = os.path.join(input_dataset, ifile)
-    print(this_file)
+    parser.add_argument(
+        "--st",
+        nargs=1,
+        default="1",
+        type=int,
+        help="Single trigger or multi (prompt,delayed) triggers"
+    )
 
-    try:
-        temp_out = CL_AmBe_analysis(
-                this_file,
-                file_count,
-                job_config
-        )
-        all_clusters.extend(temp_out["clusters"])
+    parser.add_argument(
+        "--p",
+        nargs=1,
+        default=320,
+        help="Period bt prompt and delayed trigger (if applicable)"
+    )
 
-    except Exception as e:
-       print(f"[WARNING] Failed processing {this_file}: {e}")
-       continue
+    parser.add_argument(
+        "--debug",
+        nargs=1,
+        default=True,
+        help="Run in debug mode, default: yes" 
+    )
+
+    args = parser.parse_args()
+    # Execute clustering
+
+    all_clusters = []
+    print("Starting file processing...")
+
+    # Filter out .json files 
+    file_list = os.listdir(args.input[0])
+    file_list = [f for f in file_list if not f.endswith(".json")]
+
+    for file_count, ifile in enumerate(file_list):
+
+        # Run over 10% of the dataset
+        if args.debug[0] and file_count >= 5:
+            break
+
+        this_file = os.path.join(args.input[0], ifile)
+        print(this_file)
+
+        try:
+            temp_out = CL_AmBe_analysis(
+                    this_file,
+                    file_count,
+                    args.st[0],
+                    args.trig[0],
+                    args.p[0]
+
+            )
+            all_clusters.extend(temp_out["clusters"])
+
+        except Exception as e:
+            print(f"[WARNING] Failed processing {this_file}: {e}")
+        continue
 
 
-print("\n Showing amount of clusters per file:")
-all_clusters_array = np.array(all_clusters)
-for ifile in np.unique(all_clusters_array[:,7]):
-    print(f"Dimensions of file {ifile} {all_clusters_array[all_clusters_array[:,7]==ifile].shape}")
+    print("\n Showing amount of clusters per file:")
+    all_clusters_array = np.array(all_clusters)
+    for ifile in np.unique(all_clusters_array[:,7]):
+        print(f"Dimensions of file {ifile} {all_clusters_array[all_clusters_array[:,7]==ifile].shape}")
 
 
-# Save to csv
-cltools.save_to_csv(all_clusters_array,out_clusters)
-print("\nThis script has finished successfully, happy analysis!") 
+    # Save to csv
+    cltools.save_to_csv(all_clusters_array,args.out[0])
+    print("\nThis script has finished successfully, happy analysis!") 
+
+
+
+    
