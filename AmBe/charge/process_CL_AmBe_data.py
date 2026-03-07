@@ -59,7 +59,6 @@ def CL_AmBe_analysis(input_file,file_id,single,use_trigger,period,is_debug=False
     print(f"Number of events to be processed {len(g_triggers)}")
     # Retrieve products linked to good triggers 
     light_events = h5_file['light/events',g_triggers]
-    light_wvfms = h5_file['light/wvfm',g_triggers]
     charge_events = h5_file['light/events','charge/events',g_triggers]
     charge_hits = h5_file['light/events','charge/events','charge/calib_prompt_hits',g_triggers]
 
