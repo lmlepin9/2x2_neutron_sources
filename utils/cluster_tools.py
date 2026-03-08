@@ -46,6 +46,26 @@ def cluster_hits(non_zero_charge_data,
                  file_id,
                  user_eps=3,
                  user_nsamples=1):
+    
+    '''
+    
+    Function to perform DBScan cluster on 
+    AmBe or DTG data. At the bare minimum it requires
+    the set of hits for a given file and the charge event ids.
+    If CL-matched files are being processed this function will keep
+    light event ids instead.
+
+    Args:
+        non_zero_charge_data (list): list containing non zero charge hits, charge ev ids, and optionally light ev ids
+        file_id: A number representing the file being processed
+
+        (opt) user_esp and user_nsamples: User defined config for DBScan
+    
+    Returns:
+       out_dataset: A python dictionary containing a numpy array stack with hit-level information and the 
+                    corresponding cluster labels, file-ev ids. 
+    
+    '''
 
 
 
