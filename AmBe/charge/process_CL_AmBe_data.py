@@ -5,7 +5,6 @@ import traceback
 import pandas as pd
 import argparse
 import h5flow 
-from sklearn.cluster import DBSCAN 
 
 # Path to repo root (two directories above notebook)
 light_root = os.path.abspath(f"{os.environ['REPO_DIR']}/AmBe")
@@ -32,12 +31,6 @@ def CL_AmBe_analysis(input_file,file_id,single,use_trigger,period,is_debug=False
     h5_file = h5flow.data.H5FlowDataManager(input_file,'r')
     g_triggers = None
     b_triggers = None
-
-
-    # Initialize output dataset 
-    out_dataset = {
-        "clusters":None
-    }
 
     if(single and use_trigger):
         g_triggers, b_triggers = classify_triggers_single(h5_file,debug=is_debug)
@@ -67,42 +60,18 @@ def CL_AmBe_analysis(input_file,file_id,single,use_trigger,period,is_debug=False
     non_zero_charge_events = charge_events[charge_events.data['nhit'][:,0] >= 1]
     non_zero_charge_light_ev = light_events[charge_events.data['nhit'][:,0] >= 1] 
 
-    E_clusters = []
-    n_cluster = [] 
-    n_hits_clusters = [] 
-    cluster_light_ev_id = [] 
-
-    clusterized_hits = [] 
     print(f"Number of non-zero charge events to be processed {len(non_zero_charge_events)}")
-    db = DBSCAN(eps=3,min_samples=1)
-    for icharge in range(len(non_zero_charge_events)):
-    #for icharge in range(2):
-        test_event_hits = non_zero_charge_hits[:,0][icharge][0:non_zero_charge_events.data['nhit'][:,0][icharge]]
-        this_event_light_id = non_zero_charge_light_ev['id'][icharge]
-        hits_stack_unfiltered = np.column_stack((test_event_hits.data['x'],test_event_hits.data['y'],test_event_hits.data['z'],test_event_hits.data['E'],test_event_hits.data['Q'],np.ones(len(test_event_hits))*this_event_light_id))
-        hits_stack = cltools.filter_hits(hits_stack_unfiltered)
-        if(len(hits_stack)==0):
-            continue
-        labels = db.fit_predict(hits_stack[:,:3])
-        hits_stack_label = np.column_stack((hits_stack[:,0],hits_stack[:,1],hits_stack[:,2],hits_stack[:,3],hits_stack[:,4],np.ones(len(hits_stack))*int(this_event_light_id),labels,np.ones(len(hits_stack))*int(file_id)))
-        clusterized_hits.extend(hits_stack_label.tolist())
-        temp_n_clusters = 0
 
-        for l in np.unique(labels):
-            if(l!=-1):
-                this_l_hits = hits_stack_label[hits_stack_label[:,7]==l]
-                n_hits_clusters.append(len(this_l_hits))
-                E_clusters.append(np.sum(this_l_hits[:,3]))
-                cluster_light_ev_id.append([l,this_event_light_id])
-                temp_n_clusters+=1
-            else:
-                continue
-        n_cluster.append(temp_n_clusters)
+    this_non_zero_data = [
+        non_zero_charge_events,
+        non_zero_charge_hits,
+        non_zero_charge_light_ev
+    ]
 
-    out_dataset["clusters"] = clusterized_hits
+    this_file_clusters = cltools.cluster_hits(this_non_zero_data,
+                                              file_id)
 
-
-    return out_dataset
+    return this_file_clusters
 
 
 if __name__ == "__main__":
