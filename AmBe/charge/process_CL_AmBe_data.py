@@ -25,8 +25,8 @@ def CL_AmBe_analysis(input_file,file_id,single,use_trigger,period,is_debug=False
     use_trigger = bool(use_trigger)
     single = bool(single)
 
-    print(f"Use trigger?: {use_trigger}")
-    print(f"Single trigger?: {single}")
+    print(f"Use trigger: {use_trigger}")
+    print(f"Single trigger: {single}")
 
     h5_file = h5flow.data.H5FlowDataManager(input_file,'r')
     g_triggers = None
@@ -118,7 +118,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--debug",
         nargs=1,
-        default=True,
+        default=1,
+        type=int,
         help="Run in debug mode, default: yes" 
     )
 
@@ -132,10 +133,14 @@ if __name__ == "__main__":
     file_list = os.listdir(args.input[0])
     file_list = [f for f in file_list if not f.endswith(".json")]
 
+    print("DEBUG: ",bool(args.debug[0]))
+    if(bool(args.debug[0])==True):
+        print("Running in debug mode, only 5 files will be processed.")
+
     for file_count, ifile in enumerate(file_list):
 
         # Run over 10% of the dataset
-        if args.debug[0] and file_count >= 5:
+        if bool(args.debug[0]) and file_count >= 5:
             break
 
         this_file = os.path.join(args.input[0], ifile)

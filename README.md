@@ -2,7 +2,7 @@
 
 ## Setup repository environment
 
-To setup the top-level of the repository run:
+Befor running any tool/notebook setup the top-level of the repository:
 
 ```source setup_env.sh```
 
