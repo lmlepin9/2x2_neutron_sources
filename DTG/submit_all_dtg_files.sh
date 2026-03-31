@@ -20,7 +20,7 @@ if [ ! -f "${FILE_LIST}" ]; then
     exit 1
 fi
 
-while IFS= read -r this_file; do
+while IFS= read -r this_file || [ -n "$this_file" ]; do
     [ -z "${this_file}" ] && continue
     echo "Submitting: ${this_file}"
     sbatch submit_dtg_single_file.slurm "${this_file}"
