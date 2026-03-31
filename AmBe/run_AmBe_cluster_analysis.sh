@@ -4,9 +4,9 @@
 
 
 #---------------------------- Configure your job ------------------------------------------------------
-DEBUG=1
-JOB_NAME="no_source_32us_window_test"
-INPUT_DSET="/global/cfs/cdirs/dune/users/lmlepin/neutron_source_CL_data/source_ambe_bin3/one_pmt_trig_no_source/"
+DEBUG=0
+JOB_NAME="source_in_one_trig_32us_window_testing_03-22"
+INPUT_DSET="/global/cfs/cdirs/dune/users/lmlepin/neutron_source_CL_data/source_ambe_bin2/one_trig_32us_window/"
 
 OUTPUT_DIR="/pscratch/sd/l/${USER}/cluster_outputs/"
 OUTPUT_FILE="${OUTPUT_DIR}${JOB_NAME}_$(date +"%Y%m%d_%H%M%S")_clusters.csv"
@@ -17,7 +17,7 @@ LOG_FILE="${LOG_DIR}${JOB_NAME}_$(date +"%Y%m%d_%H%M%S").log"
 SINGLE_TRIGGER=1
 USE_TRIGGER=0
 PERIOD=320
-NOHUP_OPT=0
+NOHUP_OPT=1
 
 
 #----------------------------------------------------------------------------------------------------- 

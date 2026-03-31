@@ -12,7 +12,7 @@ sys.path.append(light_root)
 
 from light.PMT_analysis_utils import * 
 
-# Path to repo root (two directories above notebook)
+
 repo_root = os.path.abspath(os.environ['REPO_DIR'])
 sys.path.append(repo_root)
 
