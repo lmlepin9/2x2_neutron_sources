@@ -1,2 +1,3 @@
 /global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1211/packet-0060171-2025_12_11_11_43_20_CST.FLOW.hdf5
 /global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1211/packet-0060174-2025_12_11_14_13_08_CST.FLOW.hdf5
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1211/packet-0060178-2025_12_12_15_59_36_CST.FLOW.hdf5
