@@ -1,10 +1,4 @@
 #!/bin/bash
-#
-# Helper script: submit one sbatch job per file listed in a text file
-#
-# Usage:
-#   ./submit_all_dtg_files.sh DTG_1212_files.txt
-#
 
 set -u
 
@@ -20,8 +14,20 @@ if [ ! -f "${FILE_LIST}" ]; then
     exit 1
 fi
 
-while IFS= read -r this_file || [ -n "$this_file" ]; do
+# Extract base name (remove path and .txt)
+FILE_LIST_NAME=$(basename "${FILE_LIST}")
+FILE_LIST_STEM="${FILE_LIST_NAME%.txt}"
+
+# Current date + hour + minute
+DATE_STR=$(date +"%Y%m%d_%H%M")
+
+# Final job name
+JOB_NAME="${FILE_LIST_STEM}_${DATE_STR}"
+
+echo "Using job name: ${JOB_NAME}"
+
+while IFS= read -r this_file || [ -n "${this_file}" ]; do
     [ -z "${this_file}" ] && continue
     echo "Submitting: ${this_file}"
-    sbatch submit_dtg_single_file.slurm "${this_file}"
+    sbatch --job-name="${JOB_NAME}" submit_dtg_single_file.slurm "${this_file}"
 done < "${FILE_LIST}"

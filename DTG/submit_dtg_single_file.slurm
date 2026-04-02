@@ -4,20 +4,17 @@
 # One file per submission.
 #
 # Usage:
-#   sbatch submit_dtg_single_file.slurm /full/path/to/file.FLOW.hdf5
+#   sbatch --job-name=MY_JOB_NAME submit_dtg_single_file.slurm /full/path/to/file.FLOW.hdf5
 #
-# Example:
-#   sbatch submit_dtg_single_file.slurm /global/cfs/cdirs/dune/www/data/.../packet-0060180-2025_12_12_16_46_12_CST.FLOW.hdf5
-#
+
 # ------------------------------------------------------------------------------------
-#SBATCH -A dune                    # <-- replace with your NERSC project account
+#SBATCH -A dune
 #SBATCH -C cpu
 #SBATCH -q regular
 #SBATCH -N 1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH -t 02:00:00
-#SBATCH -J DTG_data_test_03-30
 #SBATCH -o /pscratch/sd/l/%u/cluster_logs/%x-%j.out
 #SBATCH -e /pscratch/sd/l/%u/cluster_logs/%x-%j.err
 # ------------------------------------------------------------------------------------
@@ -26,7 +23,7 @@ set -u
 
 #---------------------------- Configure your job --------------------------------------
 DEBUG=1
-JOB_NAME="DTG_data_test_03-30_GRID"
+JOB_NAME="${SLURM_JOB_NAME}"
 
 LOG_DIR="/pscratch/sd/l/${USER}/cluster_logs/"
 CHUNK_SIZE=2000
@@ -34,7 +31,7 @@ IS_CL=0
 #--------------------------------------------------------------------------------------
 
 if [ "$#" -lt 1 ]; then
-    echo "Usage: sbatch $0 /full/path/to/input_file"
+    echo "Usage: sbatch --job-name=MY_JOB_NAME $0 /full/path/to/input_file"
     exit 1
 fi
 
@@ -48,7 +45,7 @@ fi
 FILE_BASENAME=$(basename "${INPUT_FILE}")
 FILE_STEM="${FILE_BASENAME%.*}"
 
-OUTPUT_DIR="/pscratch/sd/l/${USER}/cluster_outputs/${JOB_NAME}_${SLURM_JOB_ID}_${FILE_STEM}/"
+OUTPUT_DIR="/pscratch/sd/l/${USER}/cluster_outputs/${JOB_NAME}_${SLURM_JOB_ID}"
 
 echo "========== Job information =========="
 echo "Job name          : ${SLURM_JOB_NAME}"
@@ -64,13 +61,15 @@ mkdir -p "${LOG_DIR}"
 
 cd "${SLURM_SUBMIT_DIR}" || exit 1
 
-# Optional: load your environment here
-# Setup neutron_env
-cd ../
-source setup_env.sh
-cd ./DTG
+# Setup python environment
+source "$HOME/lm_env/bin/activate"
 
-# Keep your Python interface unchanged by creating a one-line input list
+# Setup neutron_env
+cd ../ || exit 1
+source setup_env.sh
+cd ./DTG || exit 1
+
+# Keep Python interface unchanged by creating a one-line input list
 TMP_FILELIST="${OUTPUT_DIR}/input_${SLURM_JOB_ID}.txt"
 printf "%s\n" "${INPUT_FILE}" > "${TMP_FILELIST}"
 
