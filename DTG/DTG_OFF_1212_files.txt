@@ -1,0 +1,14 @@
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1212/packet-0060186-2025_12_12_21_31_16_CST.FLOW.hdf5
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1212/packet-0060186-2025_12_12_21_41_17_CST.FLOW.hdf5
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1212/packet-0060186-2025_12_12_23_11_27_CST.FLOW.hdf5
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1212/packet-0060186-2025_12_12_22_11_20_CST.FLOW.hdf5
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1212/packet-0060186-2025_12_12_23_01_26_CST.FLOW.hdf5
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1212/packet-0060186-2025_12_12_22_21_21_CST.FLOW.hdf5
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1212/packet-0060186-2025_12_12_23_21_28_CST.FLOW.hdf5
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1212/packet-0060186-2025_12_12_23_51_31_CST.FLOW.hdf5
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1212/packet-0060186-2025_12_12_22_01_19_CST.FLOW.hdf5
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1212/packet-0060186-2025_12_12_23_41_30_CST.FLOW.hdf5
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1212/packet-0060186-2025_12_12_22_51_25_CST.FLOW.hdf5
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1212/packet-0060186-2025_12_12_23_31_29_CST.FLOW.hdf5
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1212/packet-0060186-2025_12_12_22_41_24_CST.FLOW.hdf5
+/global/cfs/cdirs/dune/www/data/2x2/nearline_run2/flowed_charge/ColdOperations/data/2025_Operations_Cold/source/DTG_comissioning_1212/packet-0060186-2025_12_12_22_31_23_CST.FLOW.hdf5
