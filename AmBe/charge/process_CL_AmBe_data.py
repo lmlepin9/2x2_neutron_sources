@@ -20,7 +20,10 @@ import utils.cluster_tools as cltools
 
 
 
-def CL_AmBe_analysis(input_file,file_id,single,use_trigger,period,is_debug=False):
+import numpy as np
+import h5flow
+
+def CL_AmBe_analysis(input_file, file_id, single, use_trigger, period, is_debug=False):
 
     use_trigger = bool(use_trigger)
     single = bool(single)
@@ -28,39 +31,53 @@ def CL_AmBe_analysis(input_file,file_id,single,use_trigger,period,is_debug=False
     print(f"Use trigger: {use_trigger}")
     print(f"Single trigger: {single}")
 
-    h5_file = h5flow.data.H5FlowDataManager(input_file,'r')
+    h5_file = h5flow.data.H5FlowDataManager(input_file, 'r')
     g_triggers = None
     b_triggers = None
 
-    if(single and use_trigger):
-        g_triggers, b_triggers = classify_triggers_single(h5_file,debug=is_debug)
-    
-    elif single==False and use_trigger:  
+    if single and use_trigger:
+        g_triggers, b_triggers = classify_triggers_single(h5_file, debug=is_debug)
+
+    elif (single == False) and use_trigger:
         # The period between triggers is hard-coded, needs fix
-        first_trig = check_first_trig(h5_file,period)
-        parity_str = None
-        if(first_trig):
-            parity_str = "odd"
-        else:
-            parity_str = "even"
+        first_trig = check_first_trig(h5_file, period)
+        parity_str = "odd" if first_trig else "even"
         print(f"Parity of this file: {parity_str}")
-        g_triggers, b_triggers = classify_triggers(h5_file,parity_str,debug=is_debug)
-    elif use_trigger==False:
+        g_triggers, b_triggers = classify_triggers(h5_file, parity_str)
+
+    elif use_trigger == False:
         g_triggers = h5_file['light/events/data']['id']
 
-    #print(f"List of good triggers: {g_triggers}")
     print(f"Number of events to be processed {len(g_triggers)}")
-    # Retrieve products linked to good triggers 
-    light_events = h5_file['light/events',g_triggers]
-    charge_events = h5_file['light/events','charge/events',g_triggers]
-    charge_hits = h5_file['light/events','charge/events','charge/calib_prompt_hits',g_triggers]
 
-    # Charge
-    non_zero_charge_hits = charge_hits[charge_events.data['nhit'][:,0] >= 1]
-    non_zero_charge_events = charge_events[charge_events.data['nhit'][:,0] >= 1]
-    non_zero_charge_light_ev = light_events[charge_events.data['nhit'][:,0] >= 1] 
+    # Retrieve products linked to good triggers
+    light_events  = h5_file['light/events', g_triggers]
+    charge_events = h5_file['light/events', 'charge/events', g_triggers]
+    charge_hits   = h5_file['light/events', 'charge/events', 'charge/calib_prompt_hits', g_triggers]
 
-    print(f"Number of non-zero charge events to be processed {len(non_zero_charge_events)}")
+    # Keep only events with more than one hit
+    hit_mask = charge_events.data['nhit'][:, 0] >= 1
+
+    non_zero_charge_hits = charge_hits[hit_mask]
+    non_zero_charge_events = charge_events[hit_mask]
+    non_zero_charge_light_ev = light_events[hit_mask]
+
+    print(f"Number of events with >1 hit to be processed {len(non_zero_charge_events)}")
+
+    # In debug mode, run only on 10% of the surviving events
+    if is_debug and len(non_zero_charge_events) > 0:
+        n_debug = max(1, int(0.1 * len(non_zero_charge_events)))
+
+        # Reproducible random subset
+        rng = np.random.default_rng(12345)
+        debug_idx = np.sort(rng.choice(len(non_zero_charge_events), size=n_debug, replace=False))
+
+        non_zero_charge_hits = non_zero_charge_hits[debug_idx]
+        non_zero_charge_events = non_zero_charge_events[debug_idx]
+        non_zero_charge_light_ev = non_zero_charge_light_ev[debug_idx]
+
+        print(f"DEBUG enabled: processing {len(non_zero_charge_events)} events "
+              f"({100.0 * len(non_zero_charge_events) / max(1, hit_mask.sum()):.1f}% of events with >1 hit)")
 
     this_non_zero_data = [
         non_zero_charge_events,
@@ -68,8 +85,10 @@ def CL_AmBe_analysis(input_file,file_id,single,use_trigger,period,is_debug=False
         non_zero_charge_light_ev
     ]
 
-    this_file_clusters = cltools.cluster_hits(this_non_zero_data,
-                                              file_id)
+    this_file_clusters = cltools.cluster_hits(
+        this_non_zero_data,
+        file_id
+    )
 
     return this_file_clusters
 
@@ -134,14 +153,7 @@ if __name__ == "__main__":
     file_list = [f for f in file_list if not f.endswith(".json")]
 
     print("DEBUG: ",bool(args.debug[0]))
-    if(bool(args.debug[0])==True):
-        print("Running in debug mode, only 5 files will be processed.")
-
     for file_count, ifile in enumerate(file_list):
-
-        # Run over 10% of the dataset
-        if bool(args.debug[0]) and file_count >= 5:
-            break
 
         this_file = os.path.join(args.input[0], ifile)
         print(this_file)
@@ -152,7 +164,8 @@ if __name__ == "__main__":
                     file_count,
                     args.st[0],
                     args.trig[0],
-                    args.p[0]
+                    args.p[0],
+                    bool(args.debug[0])
 
             )
             all_clusters.extend(temp_out["clusters"])
