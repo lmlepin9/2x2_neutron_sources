@@ -97,13 +97,13 @@ def hit_backtracker(hit_mc_assn, hit, ev_seg, ev_traj):
 
     # Create output dset first-----------------------------------
     hits_dtype = hit.dtype
-
     new_fields = [
-        ("best_segment_id", np.int32),
-        ("neutron_process", np.int32),
-        ("parent_neutron_id",np.int32)
+    ("best_segment_id", np.int32),
+    ("neutron_process", np.int32),
+    ("parent_neutron_id", np.int32),
+    ("best_segment_E", np.float32),
+    ("best_segment_p", "U32")   # <-- change here
     ]
-
     new_hits_dtype = np.dtype(hits_dtype.descr + new_fields)
     new_hits = np.zeros(hit.shape, dtype=new_hits_dtype)
     for name in hits_dtype.names:
@@ -125,12 +125,16 @@ def hit_backtracker(hit_mc_assn, hit, ev_seg, ev_traj):
         if(seg_id!=-1):
             this_hit_traj = np.unique(ev_traj_ids[ev_traj_ids == ev_seg[ev_seg['segment_id']==seg_id]['traj_id']])
             ancestry, process = get_ancestry(this_hit_traj,ev_traj)
+            process_str = f"{ev_traj[ev_traj['traj_id']==this_hit_traj]['start_process'][0]}::{ev_traj[ev_traj['traj_id']==this_hit_traj]['start_subprocess'][0]}"
             hit['neutron_process']=process
             hit['parent_neutron_id']=ancestry[-1]
-
+            hit['best_segment_E'] = ev_seg[ev_seg['segment_id']==seg_id]['dE']
+            hit['best_segment_p'] = process_str
         
         else:
             hit['neutron_process']=2
             hit['parent_neutron_id']=-1
+            hit['best_segment_E'] = -1
+            hit['best_segment_p'] = "-1::-1"
 
     return new_hits 
