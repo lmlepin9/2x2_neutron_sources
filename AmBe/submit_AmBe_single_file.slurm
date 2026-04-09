@@ -14,7 +14,6 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH -t 02:00:00
-#SBATCH -J ambe_job
 #SBATCH -o /pscratch/sd/l/%u/cluster_logs/%x-%j.out
 #SBATCH -e /pscratch/sd/l/%u/cluster_logs/%x-%j.err
 
@@ -27,17 +26,18 @@ SINGLE_TRIGGER="${4:-1}"
 USE_TRIGGER="${5:-0}"
 PERIOD="${6:-320}"
 
-OUTPUT_DIR="/pscratch/sd/l/${USER}/cluster_outputs/"
-LOG_DIR="/pscratch/sd/l/${USER}/cluster_logs/"
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+OUTPUT_ROOT="/pscratch/sd/l/${USER}/cluster_outputs"
+LOG_DIR="/pscratch/sd/l/${USER}/cluster_logs"
+JOB_OUTPUT_DIR="${OUTPUT_ROOT}/${JOB_NAME_ARG}"
 
-mkdir -p "${OUTPUT_DIR}"
+mkdir -p "${OUTPUT_ROOT}"
 mkdir -p "${LOG_DIR}"
+mkdir -p "${JOB_OUTPUT_DIR}"
 
 INPUT_BASENAME=$(basename "${INPUT_FILE}")
-INPUT_STEM="${INPUT_BASENAME%.*}"
+INPUT_STEM="${INPUT_BASENAME%.FLOW.hdf5}"
 
-OUTPUT_FILE="${OUTPUT_DIR}${JOB_NAME_ARG}_${INPUT_STEM}_${TIMESTAMP}_clusters.csv"
+OUTPUT_FILE="${JOB_OUTPUT_DIR}/${INPUT_STEM}_clusters.csv"
 
 # Setup python environment
 source "$HOME/lm_env/bin/activate"
@@ -45,17 +45,17 @@ source "$HOME/lm_env/bin/activate"
 # Setup neutron_env
 cd ../ || exit 1
 source setup_env.sh
-cd ./DTG || exit 1
-
+cd ./AmBe || exit 1
 
 echo "=========================================="
 echo "Running AmBe clustering job"
-echo "Hostname: $(hostname)"
-echo "Start time: $(date)"
-echo "Input file: ${INPUT_FILE}"
-echo "Output file: ${OUTPUT_FILE}"
-echo "Job name arg: ${JOB_NAME_ARG}"
-echo "SLURM_JOB_ID: ${SLURM_JOB_ID}"
+echo "Hostname:        $(hostname)"
+echo "Start time:      $(date)"
+echo "Input file:      ${INPUT_FILE}"
+echo "Job name arg:    ${JOB_NAME_ARG}"
+echo "Output dir:      ${JOB_OUTPUT_DIR}"
+echo "Output file:     ${OUTPUT_FILE}"
+echo "SLURM_JOB_ID:    ${SLURM_JOB_ID}"
 echo "=========================================="
 
 echo "Config:"

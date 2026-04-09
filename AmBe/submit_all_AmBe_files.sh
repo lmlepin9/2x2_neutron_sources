@@ -21,8 +21,8 @@ if [ ! -f "${FILE_LIST}" ]; then
 fi
 
 # ---------------------------- Configure your job ----------------------------
-DEBUG=0
-USE_TRIGGER=0
+DEBUG=1
+USE_TRIGGER=1
 # SINGLE_TRIGGER and PERIOD are inferred from FILE_LIST name
 # ----------------------------------------------------------------------------
 
@@ -31,9 +31,9 @@ BASE_NAME=$(basename "${FILE_LIST}" .txt)
 
 # ---------------- Infer SINGLE_TRIGGER from file list name ----------------
 if [[ "${BASE_NAME}" == *"period"* ]]; then
-    SINGLE_TRIGGER=1
-else
     SINGLE_TRIGGER=0
+else
+    SINGLE_TRIGGER=1
 fi
 
 # ---------------- Extract PERIOD from file list name ----------------
