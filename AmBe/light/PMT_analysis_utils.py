@@ -313,7 +313,7 @@ def check_first_trig(this_h5_file,trig_period):
         return 1
     
 
-def classify_triggers_single(this_h5_file, debug=True):
+def classify_triggers_single(this_h5_file, debug=False):
 
     '''
     Docstring for classify_triggers
@@ -328,15 +328,8 @@ def classify_triggers_single(this_h5_file, debug=True):
 
     '''
     N_events = None
-    test_PMT_events = None
-    if(debug):
-        N_events=int(len(this_h5_file['light/events']['data'])*0.1)
-        print(f"Running in debug mode with {N_events} events (10 percent)")
-    else:
-        N_events = len(this_h5_file['light/events']['data'])
-        print(f"Running with all the {N_events} events")
-
-
+    N_events = len(this_h5_file['light/events']['data'])
+    print(f"Running with all the {N_events} events")
     light_events = this_h5_file['light/events',np.arange(N_events)]
     light_wvfm = this_h5_file['light/wvfm',np.arange(N_events)]['samples']   
     good_triggers = PMT_wvfm_selection(light_wvfm,width=31)
@@ -346,7 +339,7 @@ def classify_triggers_single(this_h5_file, debug=True):
     return good_triggers_ids,bad_triggers_ids
 
 
-def classify_triggers(this_h5_file,parity,debug=True):
+def classify_triggers(this_h5_file,parity):
 
     '''
     Docstring for classify_triggers
@@ -362,18 +355,11 @@ def classify_triggers(this_h5_file,parity,debug=True):
 
     '''
 
-
     N_events = None
     test_PMT_events = None
-    if(debug):
-        N_events=int(len(this_h5_file['light/events']['data'])*0.1)
-        print(f"Running in debug mode with {N_events} events (10 percent)")
-    else:
-        N_events = len(this_h5_file['light/events']['data'])
-        print(f"Running with all the {N_events} events")
-
+    N_events = len(this_h5_file['light/events']['data'])
+    print(f"Running with {N_events} events")
     test_PMT_events = even_or_odd_indices(N_events,parity)
-
     light_events = this_h5_file['light/events',test_PMT_events]
     light_wvfm = this_h5_file['light/wvfm',test_PMT_events]['samples']   
     good_triggers = PMT_wvfm_selection(light_wvfm,width=31)
