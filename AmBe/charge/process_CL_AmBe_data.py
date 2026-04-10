@@ -190,19 +190,23 @@ def CL_AmBe_analysis(input_file, file_id, single, use_trigger, period, is_debug=
     
 
 if __name__ == "__main__":
+    import os
+    import argparse
+    import numpy as np
+
     print("Running AmBe CR cluster tool")
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
         "--input",
         required=True,
-        help="input HDF5 file"
+        help="text file containing a list of input HDF5 files (one per line)"
     )
 
     parser.add_argument(
         "--out",
         required=True,
-        help="output csv file"
+        help="base output csv file name for combined output"
     )
 
     parser.add_argument(
@@ -236,31 +240,95 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print("Starting file processing...")
-    print("Input file:", args.input)
+    print("Input file list:", args.input)
+    print("Combined output:", args.out)
     print("DEBUG:", bool(args.debug))
 
+    # ---------------- Read file list ----------------
     try:
-        temp_out = CL_AmBe_analysis(
-            args.input,
-            0,                  # file_id
-            args.st,
-            args.trig,
-            args.p,
-            bool(args.debug)
-        )
-
-        all_clusters = temp_out["clusters"]
-        prompt_clusters = temp_out["prompt_clusters"]
-        delayed_clusters = temp_out["delayed_clusters"]
-
+        with open(args.input, "r") as f:
+            file_list = [
+                line.strip()
+                for line in f
+                if line.strip() and not line.strip().startswith("#")
+            ]
     except Exception as e:
-        print(f"[WARNING] Failed processing {args.input}: {e}")
-        all_clusters = []
-        prompt_clusters = []
-        delayed_clusters = []
+        raise RuntimeError(f"Could not read input file list {args.input}: {e}")
 
-    print("\nShowing amount of clusters per file:")
-    all_clusters_array = np.array(all_clusters)
+    if len(file_list) == 0:
+        raise RuntimeError(f"No input files found in list: {args.input}")
+
+    print(f"Number of files to process: {len(file_list)}")
+
+    # ---------------- Prepare output names ----------------
+    base_out, ext = os.path.splitext(args.out)
+    if ext.lower() != ".csv":
+        raise ValueError("--out must end in .csv")
+
+    # ---------------- Accumulate combined outputs ----------------
+    all_clusters = []
+    prompt_clusters = []
+    delayed_clusters = []
+
+    # ---------------- Loop over files ----------------
+    for file_id, input_file in enumerate(file_list):
+        print("\n" + "=" * 60)
+        print(f"Processing file {file_id + 1}/{len(file_list)}")
+        print(f"Input file: {input_file}")
+
+        file_base = os.path.splitext(os.path.basename(input_file))[0]
+        per_file_out = f"{base_out}_{file_base}.csv"
+        per_file_prompt_out = f"{base_out}_{file_base}_prompt.csv"
+        per_file_delayed_out = f"{base_out}_{file_base}_delayed.csv"
+
+        try:
+            temp_out = CL_AmBe_analysis(
+                input_file,
+                file_id,
+                args.st,
+                args.trig,
+                args.p,
+                bool(args.debug)
+            )
+
+            this_clusters = temp_out.get("clusters", [])
+            this_prompt = temp_out.get("prompt_clusters", [])
+            this_delayed = temp_out.get("delayed_clusters", [])
+
+            # -------- Save one CSV per file --------
+            if len(this_clusters) > 0:
+                cltools.save_to_csv(np.array(this_clusters, dtype=object), per_file_out)
+                print(f"Saved per-file output: {per_file_out}")
+            else:
+                print("No clusters for this file, per-file main CSV not written.")
+
+            if len(this_prompt) > 0:
+                cltools.save_to_csv(np.array(this_prompt, dtype=object), per_file_prompt_out)
+                print(f"Saved per-file prompt output: {per_file_prompt_out}")
+
+            if len(this_delayed) > 0:
+                cltools.save_to_csv(np.array(this_delayed, dtype=object), per_file_delayed_out)
+                print(f"Saved per-file delayed output: {per_file_delayed_out}")
+
+            # -------- Also accumulate combined outputs --------
+            all_clusters.extend(this_clusters)
+            prompt_clusters.extend(this_prompt)
+            delayed_clusters.extend(this_delayed)
+
+            print(
+                f"Finished {input_file} | "
+                f"clusters: {len(this_clusters)}, "
+                f"prompt: {len(this_prompt)}, "
+                f"delayed: {len(this_delayed)}"
+            )
+
+        except Exception as e:
+            print(f"[WARNING] Failed processing {input_file}: {e}")
+            continue
+
+    # ---------------- Write combined outputs ----------------
+    print("\nShowing amount of clusters per file in combined output:")
+    all_clusters_array = np.array(all_clusters, dtype=object)
 
     if len(all_clusters_array) > 0:
         for ifile in np.unique(all_clusters_array[:, 8]):
@@ -270,18 +338,18 @@ if __name__ == "__main__":
             )
 
         cltools.save_to_csv(all_clusters_array, args.out)
+        print(f"Combined clusters written to: {args.out}")
     else:
         print("No clusters were produced, combined output CSV will not be written.")
 
-    # Optional separate outputs
     if len(prompt_clusters) > 0:
-        prompt_out = args.out.replace(".csv", "_prompt.csv")
-        cltools.save_to_csv(np.array(prompt_clusters), prompt_out)
-        print(f"Prompt clusters written to: {prompt_out}")
+        prompt_out = f"{base_out}_prompt.csv"
+        cltools.save_to_csv(np.array(prompt_clusters, dtype=object), prompt_out)
+        print(f"Combined prompt clusters written to: {prompt_out}")
 
     if len(delayed_clusters) > 0:
-        delayed_out = args.out.replace(".csv", "_delayed.csv")
-        cltools.save_to_csv(np.array(delayed_clusters), delayed_out)
-        print(f"Delayed clusters written to: {delayed_out}")
+        delayed_out = f"{base_out}_delayed.csv"
+        cltools.save_to_csv(np.array(delayed_clusters, dtype=object), delayed_out)
+        print(f"Combined delayed clusters written to: {delayed_out}")
 
     print("\nThis script has finished successfully, happy analysis!")
