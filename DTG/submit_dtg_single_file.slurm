@@ -4,7 +4,7 @@
 # One file per submission.
 #
 # Usage:
-#   sbatch --job-name=MY_JOB_NAME submit_dtg_single_file.slurm /full/path/to/file.FLOW.hdf5
+#   sbatch --job-name=MY_JOB_NAME submit_dtg_single_file.slurm /full/path/to/file.FLOW.hdf5 [cl:0|1] [debug:0|1]
 #
 
 # ------------------------------------------------------------------------------------
@@ -14,7 +14,7 @@
 #SBATCH -N 1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH -t 02:00:00
+#SBATCH -t 00:01:00
 #SBATCH -o /pscratch/sd/l/%u/cluster_logs/%x-%j.out
 #SBATCH -e /pscratch/sd/l/%u/cluster_logs/%x-%j.err
 # ------------------------------------------------------------------------------------
@@ -22,20 +22,30 @@
 set -u
 
 #---------------------------- Configure your job --------------------------------------
-DEBUG=1
+DEBUG="${3:-0}"
 JOB_NAME="${SLURM_JOB_NAME}"
 
 LOG_DIR="/pscratch/sd/l/${USER}/cluster_logs/"
 CHUNK_SIZE=2000
-IS_CL=0
+IS_CL="${2:-0}"
 #--------------------------------------------------------------------------------------
 
 if [ "$#" -lt 1 ]; then
-    echo "Usage: sbatch --job-name=MY_JOB_NAME $0 /full/path/to/input_file"
+    echo "Usage: sbatch --job-name=MY_JOB_NAME $0 /full/path/to/input_file [cl:0|1] [debug:0|1]"
     exit 1
 fi
 
 INPUT_FILE="$1"
+
+if [[ "${IS_CL}" != "0" && "${IS_CL}" != "1" ]]; then
+    echo "ERROR: CL toggle must be 0 or 1, got: ${IS_CL}"
+    exit 1
+fi
+
+if [[ "${DEBUG}" != "0" && "${DEBUG}" != "1" ]]; then
+    echo "ERROR: DEBUG toggle must be 0 or 1, got: ${DEBUG}"
+    exit 1
+fi
 
 if [ ! -f "${INPUT_FILE}" ]; then
     echo "ERROR: Input file does not exist: ${INPUT_FILE}"
@@ -53,6 +63,8 @@ echo "Job ID            : ${SLURM_JOB_ID}"
 echo "Node list         : ${SLURM_JOB_NODELIST}"
 echo "Submit directory  : ${SLURM_SUBMIT_DIR}"
 echo "Input file        : ${INPUT_FILE}"
+echo "CL mode           : ${IS_CL}"
+echo "Debug mode        : ${DEBUG}"
 echo "Start time        : $(date)"
 echo "====================================="
 
