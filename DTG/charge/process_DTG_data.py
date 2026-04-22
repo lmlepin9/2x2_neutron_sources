@@ -70,41 +70,55 @@ def DTG_data_cluster_analysis(
 
             print(f"\n[Chunk {chunk_idx + 1}/{n_chunks}] Processing events {start}:{stop}")
 
-            if is_CL:
-                print("  CL mode not implemented yet, skipping chunk.")
-                continue
-
             # ------------------ Read events ------------------
             t0 = time.time()
-            charge_events = h5_file['charge/events', event_slice]
+            if is_CL:
+                light_events = h5_file['light/events', event_slice]
+                charge_events = h5_file['light/events', 'charge/events', event_slice]
+            else:
+                charge_events = h5_file['charge/events', event_slice]
             t1 = time.time()
-
-            # ------------------ Apply cut ------------------
-            mask = charge_events['nhit'] >= 1
-            if not np.any(mask):
-                print("  No events passed nhit cut")
-                del charge_events
-                continue
-
-            non_zero_charge_events = charge_events[mask]
-            selected_ids = non_zero_charge_events['id']
-
-            if is_debug:
-                print(f"  Non-zero charge events: {len(non_zero_charge_events)}")
 
             # ------------------ Read hits ------------------
             t2 = time.time()
-            non_zero_charge_hits = h5_file['charge/events', 'charge/calib_prompt_hits', selected_ids]
+            if is_CL:
+                charge_hits = h5_file['light/events', 'charge/events', 'charge/calib_prompt_hits', event_slice]
+                this_non_zero_data = [
+                    charge_events,
+                    charge_hits,
+                    light_events
+                ]
+                n_events_this_chunk = len(light_events)
+            else:
+                mask = charge_events['nhit'] >= 1
+                if not np.any(mask):
+                    print("  No events passed nhit cut")
+                    del charge_events
+                    continue
+
+                non_zero_charge_events = charge_events[mask]
+                selected_ids = non_zero_charge_events['id']
+                non_zero_charge_hits = h5_file['charge/events', 'charge/calib_prompt_hits', selected_ids]
+                this_non_zero_data = [
+                    non_zero_charge_events,
+                    non_zero_charge_hits
+                ]
+                n_events_this_chunk = len(non_zero_charge_events)
             t3 = time.time()
 
-            # ------------------ Clustering ------------------
-            this_non_zero_data = [
-                non_zero_charge_events,
-                non_zero_charge_hits
-            ]
+            if is_debug:
+                if is_CL:
+                    print(f"  CL events in chunk: {n_events_this_chunk}")
+                else:
+                    print(f"  Non-zero charge events: {n_events_this_chunk}")
 
             t4 = time.time()
-            temp_out = cltools.cluster_hits(this_non_zero_data, file_id,select_io=True,is_debug=True)
+            temp_out = cltools.cluster_hits(
+                this_non_zero_data,
+                file_id,
+                select_io=True,
+                is_debug=is_debug
+            )
             t5 = time.time()
 
             # ------------------ Save this chunk ------------------
@@ -146,7 +160,10 @@ def DTG_data_cluster_analysis(
             print(f"  Clusters saved in chunk: {n_clusters_this_chunk}")
 
             # Optional cleanup
-            del charge_events, non_zero_charge_events, non_zero_charge_hits
+            if is_CL:
+                del light_events, charge_events, charge_hits
+            else:
+                del charge_events, non_zero_charge_events, non_zero_charge_hits
             if temp_out is not None:
                 del temp_out
             if 'this_clusters' in locals():
