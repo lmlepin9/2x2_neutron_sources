@@ -22,6 +22,10 @@ NOHUP_OPT=1
 
 #----------------------------------------------------------------------------------------------------- 
 
+cd ../ || exit 1
+source setup_env.sh
+cd ./AmBe || exit 1
+
 echo "Creating output directory"
 mkdir -p $OUTPUT_DIR
 
@@ -39,4 +43,3 @@ else
     echo "python ./charge/process_CL_AmBe_data.py --input ${INPUT_DSET} --out ${OUTPUT_FILE} --trig ${USE_TRIGGER} --st ${SINGLE_TRIGGER} --p ${PERIOD} --debug ${DEBUG}"
     python ./charge/process_CL_AmBe_data.py --input ${INPUT_DSET} --out ${OUTPUT_FILE} --trig ${USE_TRIGGER} --st ${SINGLE_TRIGGER} --p ${PERIOD} --debug ${DEBUG}
 fi 
-

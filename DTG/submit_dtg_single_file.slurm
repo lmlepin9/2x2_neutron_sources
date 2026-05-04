@@ -73,10 +73,7 @@ mkdir -p "${LOG_DIR}"
 
 cd "${SLURM_SUBMIT_DIR}" || exit 1
 
-# Setup python environment
-source "$HOME/lm_env/bin/activate"
-
-# Setup neutron_env
+# Setup environment
 cd ../ || exit 1
 source setup_env.sh
 cd ./DTG || exit 1

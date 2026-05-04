@@ -70,10 +70,8 @@ mkdir -p "${JOB_OUTPUT_DIR}"
 N_INPUT_FILES=$(grep -v '^[[:space:]]*$' "${INPUT_LIST}" | grep -vc '^[[:space:]]*#' || true)
 
 # ------------------------------------------------------------
-# Setup environments
+# Setup environment
 # ------------------------------------------------------------
-source "$HOME/lm_env/bin/activate"
-
 cd ../ || exit 1
 source setup_env.sh
 cd ./AmBe || exit 1
