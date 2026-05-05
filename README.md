@@ -2,11 +2,21 @@
 
 ## Setup repository environment
 
-Befor running any tool/notebook setup the top-level of the repository:
+Before running any tool or notebook, source the repository setup from the top level:
 
-```source setup_env.sh```
+```bash
+cd /path/to/2x2_neutron_sources
+source setup_env.sh
+```
 
-This is needed by the processing data scripts. 
+This script:
+
+- exports `REPO_DIR`
+- creates `~/neutron_env_py` if it does not already exist
+- installs the pinned dependencies from `requirements/neutron_env_py_requirements.txt` on first creation
+- activates `~/neutron_env_py` on every run
+
+This setup is needed by the processing data scripts.
 
 ## To Analyze AmBe data check the respective repository.
 

@@ -28,7 +28,7 @@ Why:
 So the expected workflow is:
 
 ```bash
-cd /global/homes/l/lmlepin/neutron_source_work/2x2_neutron_sources/DTG
+cd "${REPO_DIR}/DTG"
 ```
 
 ## Environment setup
@@ -36,6 +36,7 @@ cd /global/homes/l/lmlepin/neutron_source_work/2x2_neutron_sources/DTG
 The Slurm script uses:
 
 ```bash
+cd "${REPO_DIR}"
 source setup_env.sh
 ```
 
@@ -46,6 +47,7 @@ source setup_env.sh
 From `DTG/`, run:
 
 ```bash
+cd "${REPO_DIR}/DTG"
 bash submit_all_dtg_files.sh DTG_ON_1212_files.txt
 ```
 
@@ -58,6 +60,7 @@ bash submit_all_dtg_files.sh FILE_LIST.txt [cl:0|1] [debug:0|1]
 Examples:
 
 ```bash
+cd "${REPO_DIR}/DTG"
 bash submit_all_dtg_files.sh DTG_ON_1212_files.txt 0 0
 bash submit_all_dtg_files.sh DTG_ON_CL_1212_files.txt 1 0
 bash submit_all_dtg_files.sh DTG_BKG_CL_files.txt 1 1
@@ -145,6 +148,7 @@ If you want a different chunk size for batch jobs, edit:
 For interactive testing without `sbatch`, you can use:
 
 ```bash
+cd "${REPO_DIR}/DTG"
 bash run_DTG_cluster_analysis.sh [cl:0|1] [debug:0|1]
 ```
 
@@ -205,7 +209,7 @@ Both submission scripts check that the input list or input file exists and will 
 
 For production runs:
 
-1. `cd` into `DTG/`
+1. `cd "${REPO_DIR}/DTG"`
 2. Choose the correct file list
 3. Decide whether the input is CL or non-CL
 4. Submit with `submit_all_dtg_files.sh`

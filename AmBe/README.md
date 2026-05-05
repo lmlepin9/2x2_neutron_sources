@@ -28,7 +28,7 @@ Why:
 Expected workflow:
 
 ```bash
-cd /global/homes/l/lmlepin/neutron_source_work/2x2_neutron_sources/AmBe
+cd "${REPO_DIR}/AmBe"
 ```
 
 ## Environment setup
@@ -36,6 +36,7 @@ cd /global/homes/l/lmlepin/neutron_source_work/2x2_neutron_sources/AmBe
 The Slurm job uses:
 
 ```bash
+cd "${REPO_DIR}"
 source setup_env.sh
 ```
 
@@ -46,6 +47,7 @@ source setup_env.sh
 From `AmBe/`, run:
 
 ```bash
+cd "${REPO_DIR}/AmBe"
 bash submit_ambe_list.sh AmBe_mod2_pmt_trigger_109us_period.txt
 ```
 
@@ -58,9 +60,10 @@ bash submit_ambe_list.sh INPUT_LIST.txt [DEBUG]
 Examples:
 
 ```bash
+cd "${REPO_DIR}/AmBe"
 bash submit_ambe_list.sh AmBe_mod2_pmt_trigger_32us_period.txt 0
 bash submit_ambe_list.sh AmBe_mod2_pmt_trigger_prompt.txt 1
-bash submit_ambe_list.sh /full/path/to/my_ambe_list.txt 0
+bash submit_ambe_list.sh "${REPO_DIR}/AmBe/my_ambe_list.txt" 0
 ```
 
 Argument meanings:
@@ -172,6 +175,7 @@ If a file or category produces no clusters, that specific CSV is not written.
 For interactive testing without `sbatch`, you can use:
 
 ```bash
+cd "${REPO_DIR}/AmBe"
 bash run_AmBe_cluster_analysis.sh
 ```
 
@@ -224,7 +228,7 @@ The Python script only writes CSVs for categories that produced clusters. A job 
 
 ## Recommended workflow
 
-1. `cd` into `AmBe/`
+1. `cd "${REPO_DIR}/AmBe"`
 2. Choose the correct input file list
 3. Verify the list filename matches the intended trigger/period mode
 4. Submit with `submit_ambe_list.sh`
