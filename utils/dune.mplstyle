@@ -20,7 +20,7 @@ axes.edgecolor: black
 axes.grid :     False
 axes.linewidth: 1.0
 axes.labelsize: xx-large
-axes.titlesize: 36
+axes.titlesize: 20
 
 # Okabe-Ito color scheme.  Original ordering.
 # This ordering unfortunately puts yellow, which is hard to see on projectors,
