@@ -40,10 +40,10 @@ def dune_label(ax=None, loc="upper left", fontsize=12, fontstyle="italic"):
         ax = plt.gca()
 
     coords = {
-        "upper left":  (0.02, 0.98, "left",  "top"),
-        "upper right": (0.98, 0.98, "right", "top"),
-        "lower left":  (0.02, 0.02, "left",  "bottom"),
-        "lower right": (0.98, 0.02, "right", "bottom"),
+        "upper left":  (0.03, 0.97, "left",  "top"),
+        "upper right": (0.97, 0.97, "right", "top"),
+        "lower left":  (0.03, 0.03, "left",  "bottom"),
+        "lower right": (0.97, 0.03, "right", "bottom"),
     }
     x, y, ha, va = coords.get(loc, coords["upper left"])
     ax.text(x, y, _LABEL_TEXT, transform=ax.transAxes,
