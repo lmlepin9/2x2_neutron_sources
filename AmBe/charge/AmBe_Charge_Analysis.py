@@ -34,6 +34,10 @@ from utils.my_ev_display import event_display
 AmBe analysis code for running with nohup
 '''
 
+# Configure your analysis here 
+# This debug mode will process only the 10% of the dataset , use this if looking at source data
+DEBUG = False
+MULTI = False
 
 def filter_hits(hits_set):
     # Remove hits with negative energy
@@ -120,7 +124,6 @@ def CL_AmBe_analysis(input_file,file_id,single=True,clust_eps=1,clust_min_sample
 
     out_dataset["clusters"] = clusterized_hits
 
-
     return out_dataset
 
 def get_AmBe_analysis_data(input_file):
@@ -151,70 +154,41 @@ def get_AmBe_analysis_data(input_file):
     return all_clusters_array
 
 
-# Load source data
-df = pd.read_csv('../output/source_ambe_bin2_one_trig_32us_window_clusters_with_source.csv')
+# Load source data clustered with eps=1cm, minimum_cluster_size=4
+df_eps1size4 = pd.read_csv('../output/eps1_minsamples4/ambe_bin2_one_trig_32us_window_eps1size4.csv')
 
-# Load source data clustered with more stringent parameters
-df_eps1size4 = pd.read_csv('../output/source_ambe_bin2_one_trig_32us_window_eps1size4.csv')
-
-# Load no source data
-df_nosource = pd.read_csv('../output/source_ambe_bin2_one_trig_32us_window_clusters.csv')
-
-# Load no source data with more stringent parameters
-df_nosource_eps1size4 = pd.read_csv('../output/nosource_ambe_bin2_one_trig_32us_window_eps1size4.csv')
-
+# Load no source data clustered with eps=1cm, minimum_cluster_size=4
+df_nosource_eps1size4 = pd.read_csv('../output/eps1_minsamples4/nosource_ambe_bin2_one_trig_32us_window_eps1size4.csv')
 
 
 # Get cluster energies and cluster hit count
-source_clusterE = []
-source_clusterhitcount = []
-
 source_eps1size4_clusterE = []
 source_eps1size4_clusterhitcount = []
-
-nosource_clusterE = []
-nosource_clusterhitcount = []
 
 nosource_eps1size4_clusterE = []
 nosource_eps1size4_clusterhitcount = []
 
-# select n good triggers from the dataset
-
-n = 100000
-
-df_trig_ids = df['file_id'].astype(str)+ '::' + df['light_id'].astype(str)
-for i in np.unique(df_trig_ids)[:n]:
-    temp_ids = df['id'][(df_trig_ids==i) & (df['cluster_label']!=-1)]
-    for j in np.unique(temp_ids):
-        source_clusterE.append(sum(df['E'][df['id']==j]))
-        source_clusterhitcount.append(len(df['E'][df['id']==j]))
-
-print('yo')
-
+# select as many triggers as the dataset with the least triggers:
 df_eps1size4_trig_ids = df_eps1size4['file_id'].astype(str)+ '::' + df_eps1size4['light_id'].astype(str)
+df_nosource_eps1size4_trig_ids = df_nosource_eps1size4['file_id'].astype(str)+ '::' + df_nosource_eps1size4['light_id'].astype(str)
+
+n = min([len(np.unique(df_eps1size4_trig_ids)), len(np.unique(df_nosource_eps1size4_trig_ids))])
+
 for i in np.unique(df_eps1size4_trig_ids)[:n]:
     temp_ids = df_eps1size4['id'][(df_eps1size4_trig_ids==i) & (df_eps1size4['cluster_label']!=-1)]
     for j in np.unique(temp_ids):
         source_eps1size4_clusterE.append(sum(df_eps1size4['E'][df_eps1size4['id']==j]))
         source_eps1size4_clusterhitcount.append(len(df_eps1size4['E'][df_eps1size4['id']==j]))
 
-print('yo')
+print('1/2 Completed')
 
-df_nosource_trig_ids = df_nosource['file_id'].astype(str)+ '::' + df_nosource['light_id'].astype(str)
-for i in np.unique(df_nosource_trig_ids)[:n]:
-    temp_ids = df_nosource['id'][(df_nosource_trig_ids==i) & (df_nosource['cluster_label']!=-1)]
-    for j in np.unique(temp_ids):
-        nosource_clusterE.append(sum(df_nosource['E'][df_nosource['id']==j]))
-        nosource_clusterhitcount.append(len(df_nosource['E'][df_nosource['id']==j]))
-
-print('yo')
-
-df_nosource_eps1size4_trig_ids = df_nosource_eps1size4['file_id'].astype(str)+ '::' + df_nosource_eps1size4['light_id'].astype(str)
 for i in np.unique(df_nosource_eps1size4_trig_ids)[:n]:
     temp_ids = df_nosource_eps1size4['id'][(df_nosource_eps1size4_trig_ids==i) & (df_nosource_eps1size4['cluster_label']!=-1)]
     for j in np.unique(temp_ids):
         nosource_eps1size4_clusterE.append(sum(df_nosource_eps1size4['E'][df_nosource_eps1size4['id']==j]))
         nosource_eps1size4_clusterhitcount.append(len(df_nosource_eps1size4['E'][df_nosource_eps1size4['id']==j]))
+
+print('2/2 Completed')
 
 
 # Visualize and compare
@@ -223,9 +197,7 @@ for i in np.unique(df_nosource_eps1size4_trig_ids)[:n]:
 
 plt.figure(figsize=(12, 6))
 
-plt.hist(source_clusterE, color='green', histtype='step', bins=np.arange(0,10,0.2), label='Source Data (eps3 size2)')
 plt.hist(source_eps1size4_clusterE, color='blue', histtype='step', bins=np.arange(0,10,0.2), label='Source Data (eps1 size4)')
-plt.hist(nosource_clusterE, color='peru', histtype='step', bins=np.arange(0,10,0.2), label='No Source Data (eps3 size2)')
 plt.hist(nosource_eps1size4_clusterE, color='red', histtype='step', bins=np.arange(0,10,0.2), label='No Source Data (eps1 size4)')
 
 plt.xlabel('Energy of Clusters (MeV)')
@@ -235,16 +207,14 @@ plt.grid(True)
 #plt.ylim((0,10))
 plt.legend()
 plt.show()
-plt.savefig('../output/plots/tot_cluster_E.png')
+plt.savefig(f'../output/plots/eps1_maxsize4_tot_cluster_E_{n}clusts.png')
 
 
 # Cluster hit count
 
 plt.figure(figsize=(12, 6))
 
-plt.hist(source_clusterhitcount, color='green', histtype='step', bins=np.arange(0,10,1), label='Source Data (eps3 size2)')
 plt.hist(source_eps1size4_clusterhitcount, color='blue', histtype='step', bins=np.arange(0,10,1), label='Source Data (eps1 size4)')
-plt.hist(nosource_clusterhitcount, color='peru', histtype='step', bins=np.arange(0,10,1), label='No Source Data (eps3 size2)')
 plt.hist(nosource_eps1size4_clusterhitcount, color='red', histtype='step', bins=np.arange(0,10,1), label='No Source Data (eps1 size4)')
 
 plt.xlabel('Number of Hits in Clusters')
@@ -254,16 +224,11 @@ plt.grid(True)
 #plt.ylim((0,10))
 plt.legend()
 plt.show()
-plt.savefig('../output/plots/tot_cluster_hitcount.png')
+plt.savefig(f'../output/plots/eps1_maxsize4_tot_cluster_hitcount_{n}clusts.png')
 
-source_clusterE = np.array(source_clusterE)
-source_clusterhitcount = np.array(source_clusterhitcount)
 
 source_eps1size4_clusterE = np.array(source_eps1size4_clusterE)
 source_eps1size4_clusterhitcount = np.array(source_eps1size4_clusterhitcount)
-
-nosource_clusterE = np.array(nosource_clusterE)
-nosource_clusterhitcount = np.array(nosource_clusterhitcount)
 
 nosource_eps1size4_clusterE = np.array(nosource_eps1size4_clusterE)
 nosource_eps1size4_clusterhitcount = np.array(nosource_eps1size4_clusterhitcount)
@@ -271,14 +236,8 @@ nosource_eps1size4_clusterhitcount = np.array(nosource_eps1size4_clusterhitcount
 
 # Divide up the clusters with less than 5 hits and more than 5 hits
 
-source_capturelike_E = source_clusterE[source_clusterhitcount>=5]
-source_inelasticlike_E = source_clusterE[source_clusterhitcount<5]
-
 source_eps1size4_capturelike_E = source_eps1size4_clusterE[source_eps1size4_clusterhitcount>=5]
 source_eps1size4_inelasticlike_E = source_eps1size4_clusterE[source_eps1size4_clusterhitcount<5]
-
-nosource_capturelike_E = nosource_clusterE[nosource_clusterhitcount>=5]
-nosource_inelasticlike_E = nosource_clusterE[nosource_clusterhitcount<5]
 
 nosource_eps1size4_capturelike_E = nosource_eps1size4_clusterE[nosource_eps1size4_clusterhitcount>=5]
 nosource_eps1size4_inelasticlike_E = nosource_eps1size4_clusterE[nosource_eps1size4_clusterhitcount<5]
@@ -288,9 +247,7 @@ nosource_eps1size4_inelasticlike_E = nosource_eps1size4_clusterE[nosource_eps1si
 
 plt.figure(figsize=(12, 6))
 
-plt.hist(source_capturelike_E, color='green', histtype='step', bins=np.arange(0,6,0.2), label='Source Data (eps3 size2)')
 plt.hist(source_eps1size4_capturelike_E, color='blue', histtype='step', bins=np.arange(0,6,0.2), label='Source Data (eps1 size4)')
-plt.hist(nosource_capturelike_E, color='peru', histtype='step', bins=np.arange(0,6,0.2), label='No Source Data (eps3 size2)')
 plt.hist(nosource_eps1size4_capturelike_E, color='red', histtype='step', bins=np.arange(0,6,0.2), label='No Source Data (eps1 size4)')
 
 plt.xlabel('Energy of Clusters (MeV)')
@@ -301,14 +258,12 @@ plt.grid(True)
 #plt.ylim((0,10))
 plt.legend()
 plt.show()
-plt.savefig('../output/plots/capt_cluster_E.png')
+plt.savefig(f'../output/plots/eps1_maxsize4_capt_cluster_E_{n}clusts.png')
 
 
 plt.figure(figsize=(12, 6))
 
-plt.hist(source_inelasticlike_E, color='green', histtype='step', bins=np.arange(0,6,0.2), label='Source Data (eps3 size2)')
 plt.hist(source_eps1size4_inelasticlike_E, color='blue', histtype='step', bins=np.arange(0,6,0.2), label='Source Data (eps1 size4)')
-plt.hist(nosource_inelasticlike_E, color='peru', histtype='step', bins=np.arange(0,6,0.2), label='No Source Data (eps3 size2)')
 plt.hist(nosource_eps1size4_inelasticlike_E, color='red', histtype='step', bins=np.arange(0,6,0.2), label='No Source Data (eps1 size4)')
 
 plt.xlabel('Energy of Clusters (MeV)')
@@ -319,4 +274,21 @@ plt.grid(True)
 #plt.ylim((0,10))
 plt.legend()
 plt.show()
-plt.savefig('../output/plots/inelastic_cluster_E.png')
+plt.savefig(f'../output/plots/eps1_maxsize4_inelastic_cluster_E_{n}clusts.png')
+
+
+# Plot the difference
+bins_range = np.arange(0,6,0.2)
+counts1, _ = np.histogram(source_eps1size4_capturelike_E, bins=bins_range)
+counts2, _ = np.histogram(nosource_eps1size4_capturelike_E, bins=bins_range)
+
+# Calculate the difference
+diff = counts1 - counts2
+
+# Plot the difference
+plt.bar(bins_range[:-1], diff, width=np.diff(bins_range), align='edge', color='orange', alpha=0.7)
+plt.xlabel('Energy of Clusters (MeV)')
+plt.ylabel('Cluster Count')
+plt.axhline(0, color='black', linestyle='--') # Add baseline
+plt.show()
+plt.savefig(f'../output/plots/eps1_maxsize4_capt_difference_cluster_E_{n}clusts.png')

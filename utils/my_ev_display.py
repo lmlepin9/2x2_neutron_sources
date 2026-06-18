@@ -1,4 +1,6 @@
+import numpy as np
 import plotly.graph_objects as go
+import plotly.express as px
 
 
 def event_display(hits_set, cluster_label=[], E=[]):
@@ -22,6 +24,17 @@ def event_display(hits_set, cluster_label=[], E=[]):
     # --------------------------------------------------
     symbol_li = ['circle', 'circle-open', 'cross', 'diamond', 'diamond-open', 'square', 'square-open', 'x']
     fig = go.Figure()
+
+
+    # Create a color map for clusters
+    colors = px.colors.qualitative.Dark24  # good categorical palette
+    color_map = {c: colors[i % len(colors)] for i, c in enumerate(np.unique(cluster_label))}
+
+    # Normalize energy for opacity
+    E = np.array(E)
+    #E_norm = (E - E.min()) / (E.max() - E.min() + 1e-9)
+    #E_norm = (E - E.min()) / (E.max() - E.min())
+    E_norm = 0.5*(E - E.min()) / (E.max() - E.min() + 1e-9)+0.5      # Change the normalization so that the lowest opacity of any data point is 0.5
 
     if not len(E):
         if not len(cluster_label):
@@ -71,20 +84,44 @@ def event_display(hits_set, cluster_label=[], E=[]):
                 name="Hits"
             ))
         else:
-            # --- Add hit points with different labels for different clusters and colored by energy ---
+            # --- Add hit points with different colors for different clusters and cluster energy in legend ---
+            # Noise hits: open circle
+            # Clustered hits: solid circle
             for index,i in enumerate(set(cluster_label)):
+                mask = cluster_label == i
+
+                # Per-point opacity
+                opacity_vals = E_norm[mask]
+
+                # Encode opacity into RGBA colors
+                base_color = color_map[i]
+
+                def hex_to_rgba(hex_color, alpha):
+                    hex_color = hex_color.lstrip('#')
+                    r, g, b = tuple(int(hex_color[j:j+2], 16) for j in (0, 2, 4))
+                    return [f'rgba({r},{g},{b},{a})' for a in alpha]
+
+                rgba_colors = hex_to_rgba(base_color, opacity_vals)
+
+                if i == -1:
+                    name = "Cluster Label: Noise"
+                    symbol = 'circle-open'
+                else:
+                    total_energy = E[mask].sum()
+                    name = f"Cluster Label: {i}; Total Energy: {total_energy:.2f} MeV"
+                    symbol = 'circle'
+
                 fig.add_trace(go.Scatter3d(
-                    x=hits_x[cluster_label==i], y=hits_y[cluster_label==i], z=hits_z[cluster_label==i],
+                    x=hits_x[mask],
+                    y=hits_y[mask],
+                    z=hits_z[mask],
                     mode='markers',
                     marker=dict(
                         size=4,
-                        color=E,             # <-- color by time
-                        colorscale='Viridis',      # 'Viridis', 'Plasma', 'Turbo', etc.
-                        colorbar=dict(title="Energy (MeV)"),
-                        opacity=0.9,
-                        symbol=symbol_li[index%len(set(symbol_li))]
+                        color=rgba_colors,   # <-- color + opacity together
+                        symbol=symbol
                     ),
-                    name=f'Cluster Label: {i}'
+                    name=name
                 ))
 
     # --------------------------------------------------
@@ -261,7 +298,7 @@ def event_display(hits_set, cluster_label=[], E=[]):
         scene_camera=dict(
         up=dict(x=0, y=1, z=0),  # Defines which direction is 'up', in this case it should be y
         ),
-        width=800,
+        width=1200,
         height=800,
         title="2x2 Event Display",
         legend=dict(
