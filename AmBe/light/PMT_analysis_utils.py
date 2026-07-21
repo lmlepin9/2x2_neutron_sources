@@ -4,8 +4,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import norm
 import os 
+from pathlib import Path
 
-plt.style.use(f"{os.environ['REPO_DIR']}/utils/dune.mplstyle")
+repo_dir = os.environ.get("REPO_DIR")
+if repo_dir is not None:
+    style_path = Path(repo_dir) / "utils" / "dune.mplstyle"
+else:
+    style_path = Path(__file__).resolve().parents[2] / "utils" / "dune.mplstyle"
+
+plt.style.use(style_path)
 
 def min_range_baseline(array, segment_size=25, num_segments=40, num_means=4):
 
