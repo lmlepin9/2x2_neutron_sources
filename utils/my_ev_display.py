@@ -1,8 +1,18 @@
 import plotly.graph_objects as go
 
 
-
-def event_display(hits_set):
+def event_display(
+    hits_set,
+    *,
+    fig=None,
+    trace_name="Hits",
+    title="2x2 Event Display",
+    colorbar_title="Time",
+    colorscale="Turbo",
+    marker_kwargs=None,
+    show=True,
+    return_fig=False,
+):
 
     hits_x = hits_set[:,0]
     hits_y = hits_set[:,1]
@@ -21,20 +31,25 @@ def event_display(hits_set):
     # --------------------------------------------------
     # Create event display
     # --------------------------------------------------
-    fig = go.Figure()
+    if fig is None:
+        fig = go.Figure()
+
+    marker = dict(
+        size=4,
+        color=hits_c,
+        colorscale=colorscale,
+        colorbar=dict(title=colorbar_title),
+        opacity=0.9
+    )
+    if marker_kwargs is not None:
+        marker.update(marker_kwargs)
 
     # --- Add hit points colored by time ---
     fig.add_trace(go.Scatter3d(
         x=hits_x, y=hits_y, z=hits_z,
         mode='markers',
-        marker=dict(
-            size=4,
-            color=hits_c,             # <-- color by time
-            colorscale='Turbo',      # 'Viridis', 'Plasma', 'Turbo', etc.
-            colorbar=dict(title="Time"),
-            opacity=0.9
-        ),
-        name="Hits"
+        marker=marker,
+        name=trace_name
     ))
 
     # --------------------------------------------------
@@ -210,7 +225,11 @@ def event_display(hits_set):
         ),
         width=800,
         height=800,
-        title="2x2 Event Display"
+        title=title
     )
 
-    fig.show()
+    if show:
+        fig.show()
+
+    if return_fig:
+        return fig
