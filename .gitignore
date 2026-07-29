@@ -6,3 +6,4 @@
 *.log
 *.csv
 __pycache__/
+neutron_env_py/

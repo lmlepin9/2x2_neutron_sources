@@ -1,0 +1,9 @@
+name: ambe_cluster
+
+resources:
+  cpu: 1
+  memory: 4GB
+  walltime: 30m
+
+command: |
+  ./submit_ambe_list_dunegpvm.sh ${INPUT_LIST} ${DEBUG}
