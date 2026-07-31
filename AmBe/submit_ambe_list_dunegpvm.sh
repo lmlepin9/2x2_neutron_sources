@@ -10,8 +10,11 @@ set -euo pipefail
 INPUT_LIST="/exp/dune/app/users/edgarmao/2x2_neutron_sources/AmBe/one_pmt_trig_no_source_file_list.txt"
 DEBUG="${2:-0}"
 
-OUTPUT_ROOT="/exp/dune/app/users/${USER}/neutron_cluster_outputs"
-LOG_DIR="/exp/dune/app/users/${USER}/neutron_cluster_logs"
+#OUTPUT_ROOT="/exp/dune/app/users/${USER}/neutron_cluster_outputs"
+#LOG_DIR="/exp/dune/app/users/${USER}/neutron_cluster_logs"
+
+OUTPUT_ROOT="/exp/dune/app/users/edgarmao/neutron_cluster_outputs"
+LOG_DIR="/exp/dune/app/users/edgarmao/neutron_cluster_logs"
 
 if [ ! -f "${INPUT_LIST}" ]; then
     echo "ERROR: input file list does not exist: ${INPUT_LIST}"
