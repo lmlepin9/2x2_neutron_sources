@@ -6,7 +6,8 @@
 
 set -euo pipefail
 
-INPUT_LIST="${1:?ERROR: missing input file list argument}"
+#INPUT_LIST="${1:?ERROR: missing input file list argument}"
+INPUT_LIST="/exp/dune/app/users/edgarmao/2x2_neutron_sources/AmBe/one_pmt_trig_no_source_file_list.txt"
 DEBUG="${2:-0}"
 
 OUTPUT_ROOT="/exp/dune/app/users/${USER}/neutron_cluster_outputs"
@@ -59,7 +60,7 @@ N_INPUT_FILES=$(grep -v '^[[:space:]]*$' "${INPUT_LIST}" | grep -vc '^[[:space:]
 # Setup environment
 #--------------------------------------------------------------
 
-cd ..
+cd /exp/dune/app/users/edgarmao/2x2_neutron_sources
 source setup_env.sh
 cd AmBe
 
