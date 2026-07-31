@@ -6,6 +6,8 @@
 
 set -euo pipefail
 
+echo pwd
+
 #INPUT_LIST="${1:?ERROR: missing input file list argument}"
 INPUT_LIST="/exp/dune/app/users/edgarmao/2x2_neutron_sources/AmBe/one_pmt_trig_no_source_file_list.txt"
 DEBUG="${2:-0}"
@@ -18,6 +20,8 @@ LOG_DIR="/exp/dune/app/users/edgarmao/neutron_cluster_logs"
 
 if [ ! -f "${INPUT_LIST}" ]; then
     echo "ERROR: input file list does not exist: ${INPUT_LIST}"
+    echo "Current Location:"
+    pwd
     exit 1
 fi
 
