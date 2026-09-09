@@ -61,12 +61,12 @@ def CL_AmBe_analysis(input_file, file_id, single, use_trigger, period, is_debug=
 
     def run_cluster(trigger_ids, label=""):
         """
-        Run cluster_hits() and always return a 2D numpy array of shape (N, 9).
+        Run cluster_hits() and always return a 2D numpy array of shape (N, 10).
         """
         cluster_input = build_cluster_input(trigger_ids, label=label)
 
         if cluster_input is None:
-            return np.empty((0, 9))
+            return np.empty((0, 10))
 
         out = cltools.cluster_hits(
             cluster_input,
@@ -74,7 +74,7 @@ def CL_AmBe_analysis(input_file, file_id, single, use_trigger, period, is_debug=
         )
 
         if out is None or "clusters" not in out or out["clusters"] is None:
-            return np.empty((0, 9))
+            return np.empty((0, 10))
 
         return out["clusters"]
 
@@ -92,7 +92,7 @@ def CL_AmBe_analysis(input_file, file_id, single, use_trigger, period, is_debug=
         return {
             "clusters": prompt_clusters,
             "prompt_clusters": prompt_clusters,
-            "delayed_clusters": np.empty((0, 9))
+            "delayed_clusters": np.empty((0, 10))
         }
 
     # ------------------------------------------------------------------
@@ -143,7 +143,7 @@ def CL_AmBe_analysis(input_file, file_id, single, use_trigger, period, is_debug=
         delayed_clusters = run_cluster(delayed_triggers, label="(delayed)")
 
         if len(prompt_clusters) == 0 and len(delayed_clusters) == 0:
-            combined_clusters = np.empty((0, 9))
+            combined_clusters = np.empty((0, 10))
         elif len(prompt_clusters) == 0:
             combined_clusters = delayed_clusters
         elif len(delayed_clusters) == 0:
@@ -185,7 +185,7 @@ def CL_AmBe_analysis(input_file, file_id, single, use_trigger, period, is_debug=
         return {
             "clusters": all_clusters,
             "prompt_clusters": all_clusters,
-            "delayed_clusters": np.empty((0, 9))
+            "delayed_clusters": np.empty((0, 10))
         }
     
 

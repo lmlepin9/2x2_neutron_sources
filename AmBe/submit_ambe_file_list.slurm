@@ -17,16 +17,16 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH -t 00:30:00
-#SBATCH -o /pscratch/sd/l/%u/cluster_logs/%x-%j.out
-#SBATCH -e /pscratch/sd/l/%u/cluster_logs/%x-%j.err
+#SBATCH -o /pscratch/sd/e/%u/cluster_logs/%x-%j.out
+#SBATCH -e /pscratch/sd/e/%u/cluster_logs/%x-%j.err
 
 set -euo pipefail
 
 INPUT_LIST="${1:?ERROR: missing input file list argument}"
 DEBUG="${2:-0}"
 
-OUTPUT_ROOT="/pscratch/sd/l/${USER}/cluster_outputs"
-LOG_DIR="/pscratch/sd/l/${USER}/cluster_logs"
+OUTPUT_ROOT="/pscratch/sd/e/${USER}/cluster_outputs"
+LOG_DIR="/pscratch/sd/e/${USER}/cluster_logs"
 
 if [ ! -f "${INPUT_LIST}" ]; then
     echo "ERROR: input file list does not exist: ${INPUT_LIST}"

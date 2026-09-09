@@ -64,6 +64,7 @@ def run_DBScan(this_event_hits, this_event_id, file_id, this_dbscan):
         hits_data['x'],
         hits_data['y'],
         hits_data['z'],
+        hits_data['unix_ts'],
         hits_data['E'],
         hits_data['Q'],
         hits_data['io_group'],
@@ -83,9 +84,10 @@ def run_DBScan(this_event_hits, this_event_id, file_id, this_dbscan):
         hits_stack[:, 0],                         # x
         hits_stack[:, 1],                         # y
         hits_stack[:, 2],                         # z
-        hits_stack[:, 3],                         # E
-        hits_stack[:, 4],                         # Q
-        hits_stack[:, 5],                         # io_group
+        hits_stack[:, 3],                         # unix_ts
+        hits_stack[:, 4],                         # E
+        hits_stack[:, 5],                         # Q
+        hits_stack[:, 6],                         # io_group
         np.full(len(hits_stack), int(this_event_id)),
         labels,
         np.full(len(hits_stack), int(file_id))
@@ -147,7 +149,7 @@ def cluster_hits(non_zero_charge_data,
 
     Returns:
         dict with:
-            out_dataset["clusters"] = np.ndarray of shape (N, 9)
+            out_dataset["clusters"] = np.ndarray of shape (N, 10)
     """
 
     out_dataset = {"clusters": None}
@@ -236,7 +238,7 @@ def cluster_hits(non_zero_charge_data,
         print(f"Total cluster_hits time:    {time.time() - t_total_loop:.3f} s")
 
     if len(cluster_chunks) == 0:
-        out_dataset["clusters"] = np.empty((0, 9))
+        out_dataset["clusters"] = np.empty((0, 10))
     else:
         out_dataset["clusters"] = np.vstack(cluster_chunks)
 

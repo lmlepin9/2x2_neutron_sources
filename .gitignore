@@ -5,4 +5,5 @@
 *.pdf
 *.log
 *.csv
+neutron_env_py/
 __pycache__/
