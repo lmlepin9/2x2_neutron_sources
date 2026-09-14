@@ -143,6 +143,7 @@ def get_runtime(input_dataset, debug=False):
             with h5.File(fullpath, "r") as f:
                 # Skip malformed files
                 if "charge/events" not in f:
+                    print(f"No charge/events in {f}")
                     continue
                 events = f["charge/events"]
                 if len(events) < 2:
@@ -640,30 +641,34 @@ def source_nosource_comparison(
     nosource_runtime,
     bins=np.arange(0, 10.5, 0.5),
     output_file=None,
+    mc_cluster_energy=None,
 ):
     """
-    Plot source and no-source cluster-energy spectra and
-    their difference.
+    Plot source and no-source cluster-energy spectra and their difference,
+    using the formatting of the Run 2 AmBe reference plot.
+
+    Runtime normalization remains separate for the source and no-source
+    datasets. This preserves the correct rate comparison when their
+    acquisition times differ.
 
     Parameters
     ----------
     source_clusters : pandas.DataFrame
         Cluster-level source data.
-
     nosource_clusters : pandas.DataFrame
         Cluster-level no-source data.
-
     source_runtime : float
         Source runtime in seconds.
-
     nosource_runtime : float
         No-source runtime in seconds.
-
     bins : array-like
         Energy histogram bin edges in MeV.
-
     output_file : str, optional
         Output filename for the figure.
+    mc_cluster_energy : array-like, optional
+        Simulated neutron-capture cluster energies. If supplied, these are
+        overlaid on the lower panel using the same normalized step-histogram
+        style as the reference plot.
 
     Returns
     -------
@@ -675,7 +680,7 @@ def source_nosource_comparison(
     # Histograms
     # ------------------------------------------------------------------
 
-    h_source, centers, _ = histogram_cluster_energy(
+    h_source, centers, edges = histogram_cluster_energy(
         source_clusters,
         bins=bins,
     )
@@ -706,83 +711,110 @@ def source_nosource_comparison(
     difference = source_rate - nosource_rate
 
     # Poisson uncertainties after runtime normalization
-    source_error = (
-        np.sqrt(h_source)
-        / source_runtime
-    )
-
-    nosource_error = (
-        np.sqrt(h_nosource)
-        / nosource_runtime
-    )
+    source_error = np.sqrt(h_source) / source_runtime
+    nosource_error = np.sqrt(h_nosource) / nosource_runtime
 
     difference_error = np.sqrt(
-        source_error**2
-        + nosource_error**2
+        source_error**2 + nosource_error**2
     )
 
     # ------------------------------------------------------------------
     # Plot
     # ------------------------------------------------------------------
 
-    fig, axes = plt.subplots(
+    f, (a0, a1) = plt.subplots(
         2,
         1,
-        figsize=(10, 8),
+        gridspec_kw={'height_ratios': [8, 5]},
         sharex=True,
+        figsize=(11, 7),
     )
 
-    ax_source = axes[0]
-    ax_difference = axes[1]
+    f.tight_layout()
 
-    # Source
-    ax_source.errorbar(
+    # Top panel: source data + no-source data
+    a0.errorbar(
         centers,
         source_rate,
         yerr=source_error,
-        fmt=".",
-        markersize=7,
-        label="Source",
+        linestyle='none',
+        color='black',
+        marker='.',
+        label='Source Data (Stat Errors Only) - All Prompt Sandbox (0.98 hrs)',
     )
 
-    # No source
-    ax_source.step(
+    a0.hist(
+        nosource_clusters.total_energy,
+        weights=np.ones(len(nosource_clusters)) / nosource_runtime,
+        linestyle='none',
+        color='red',
+        histtype='bar',
+        bins=bins,
+        label='No Source Data',
+        alpha=0.6,
+    )
+
+    a0.errorbar(
         centers,
         nosource_rate,
-        where="mid",
-        linewidth=2,
-        label="No Source",
+        yerr=nosource_error,
+        linestyle='none',
+        color='red',
+        marker='none',
     )
 
-    finalize_plot(
-        ax_source,
-        xlabel="",
-        ylabel="Rate [Hz]",
-        legend=True,
-    )
-
-    # Difference
-    ax_difference.errorbar(
+    # Bottom panel: source - no source + optional MC overlay
+    a1.errorbar(
         centers,
         difference,
         yerr=difference_error,
-        fmt=".",
-        markersize=7,
-        label="Source - No Source",
+        linestyle='none',
+        color='black',
+        marker='.',
+        label='Source - No Source Difference',
     )
 
-    ax_difference.axhline(
-        0,
-        linestyle="--",
-        linewidth=1,
-    )
+    if mc_cluster_energy is not None and len(mc_cluster_energy) > 0:
+        # Scale the normalized MC distribution to the total absolute source-minus-background excess rate.
+        scale = np.sum(np.abs(difference))
+        a1.hist(
+            mc_cluster_energy,
+            weights=np.ones(len(mc_cluster_energy)) * scale,
+            color='purple',
+            histtype='step',
+            bins=bins,
+            label='AmBe Neutron Capture Simulation',
+            density=True,
+        )
 
-    finalize_plot(
-        ax_difference,
-        xlabel="Energy of Clusters [MeV]",
-        ylabel="Rate Difference [Hz]",
-        legend=True,
-    )
+    a0.set_ylabel('Cluster Count/s', fontsize=20)
+    a1.set_xlabel('Energy of Clusters (MeV)', fontsize=20)
+    a1.set_ylabel('Subtracted Count/s', fontsize=20)
+
+    #a0.text(
+    #    3.8,
+    #    0.19,
+    #    'DUNE ND-LAr 2x2 Demonstrator: Work in Progress',
+    #    fontsize=18,
+    #)
+    #a0.text(
+    #    6.8,
+    #    0.16,
+    #    'Run 2 AmBe Source Data',
+    #    fontsize=18,
+    #)
+    #a1.text(
+    #    7.3,
+    #    0.04,
+    #    '(Stat Errors Only)',
+    #    fontsize=18,
+    #)
+
+    a0.grid(True)
+    a1.grid(True)
+
+    a0.legend(fontsize=10)
+    a1.legend(fontsize=10)
 
     plt.tight_layout()
 
@@ -790,7 +822,7 @@ def source_nosource_comparison(
         plt.savefig(
             output_file,
             dpi=300,
-            bbox_inches="tight",
+            #bbox_inches='tight'
         )
 
     return {
@@ -804,6 +836,7 @@ def source_nosource_comparison(
         "difference": difference,
         "difference_error": difference_error,
     }
+
 
 class AnalysisDataset:
     '''
@@ -842,25 +875,31 @@ def main():
     # Get runtimes
     # ---------------------------------------------------------------
 
+    # Temporary change, since some datasets are sandboxed already and some are not
+
     #source_runtime = get_runtime(
     #    args.source_directory,
     #    debug=args.debug,
     #)
 
-    #nosource_runtime = get_runtime(
-    #    args.background_directory,
-    #    debug=args.debug,
-    #)
-
-    source_runtime = get_runtime(
-        args.source_directory,
-        debug=True
-    )
-
     nosource_runtime = get_runtime(
         args.background_directory,
-        debug=False
+        debug=args.debug,
     )
+
+    # FIXME: Temporarily change this to a known value for all prompt trigger data
+
+    source_runtime = 3521.0
+
+    #source_runtime = get_runtime(
+    #    args.source_directory,
+    #    debug=True
+    #)
+
+    #nosource_runtime = get_runtime(
+    #    args.background_directory,
+    #    debug=False
+    #)
 
     # ---------------------------------------------------------------
     # Create datasets
