@@ -36,7 +36,7 @@ def save_to_csv(clusters_array,output_path):
     '''
 
     print(f"\nSaving clusters to a csv file: {output_path}")
-    df = pd.DataFrame(clusters_array, columns=['x', 'y', 'z', 'E', 'Q', 'io', 'light_id', 'cluster_label', 'file_id'])
+    df = pd.DataFrame(clusters_array, columns=['x', 'y', 'z', 'event_unix_ts', 'E', 'Q', 'io', 'light_id', 'cluster_label', 'file_id'])
 
     df["id"] = (
         df["file_id"].astype(str)
@@ -47,10 +47,10 @@ def save_to_csv(clusters_array,output_path):
     df.to_csv(output_path)
 
 
-def run_DBScan(this_event_hits, this_event_id, file_id, this_dbscan):
+def run_DBScan(this_event_hits, this_event_id, this_event_unix_ts, file_id, this_dbscan):
     """
     Run DBSCAN on one set of hits and return a NumPy array with columns:
-    x, y, z, E, Q, io_group, event_id, cluster_label, file_id
+    x, y, z, event_unix_ts, E, Q, io_group, event_id, cluster_label, file_id
     """
 
     n_hits = len(this_event_hits)
@@ -64,7 +64,7 @@ def run_DBScan(this_event_hits, this_event_id, file_id, this_dbscan):
         hits_data['x'],
         hits_data['y'],
         hits_data['z'],
-        hits_data['unix_ts'],
+        np.full(n_hits, int(this_event_unix_ts)),
         hits_data['E'],
         hits_data['Q'],
         hits_data['io_group'],
@@ -177,11 +177,13 @@ def cluster_hits(non_zero_charge_data,
         # ------------------ Extract event hits ------------------
         t0 = time.time()
 
+        # FIXME: Trial solution for introducing unix_ts
         if use_light_ids:
             test_event_hits = non_zero_charge_hits[:, 0][icharge][
                 0:non_zero_charge_events.data['nhit'][:, 0][icharge]
             ]
             this_event_id = non_zero_charge_light_ev['id'][icharge]
+            this_event_unix_ts = non_zero_charge_light_ev['utime_ms'][icharge][0]
         else:
             test_event_hits = non_zero_charge_hits[icharge][
                 0:non_zero_charge_events['nhit'][icharge]
@@ -189,8 +191,11 @@ def cluster_hits(non_zero_charge_data,
             # Use true event id if available, else fallback to icharge
             if 'id' in non_zero_charge_events.dtype.names:
                 this_event_id = non_zero_charge_events['id'][icharge]
+                this_event_unix_ts = non_zero_charge_events['unix_ts'][icharge][0]
             else:
                 this_event_id = icharge
+                print(non_zero_charge_events.dtype.names)
+                this_event_unix_ts = non_zero_charge_events['unix_ts'][icharge][0]
 
         t1 = time.time()
         t_total_extract += (t1 - t0)
@@ -214,7 +219,7 @@ def cluster_hits(non_zero_charge_data,
                     continue
 
                 t4 = time.time()
-                arr = run_DBScan(this_io_hits, this_event_id, file_id, db)
+                arr = run_DBScan(this_io_hits, this_event_id, this_event_unix_ts, file_id, db)
                 t5 = time.time()
                 t_total_dbscan += (t5 - t4)
 
@@ -223,7 +228,7 @@ def cluster_hits(non_zero_charge_data,
 
         else:
             t4 = time.time()
-            arr = run_DBScan(test_event_hits, this_event_id, file_id, db)
+            arr = run_DBScan(test_event_hits, this_event_id, this_event_unix_ts, file_id, db)
             t5 = time.time()
             t_total_dbscan += (t5 - t4)
 

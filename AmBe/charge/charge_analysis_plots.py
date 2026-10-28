@@ -167,9 +167,7 @@ def get_runtime(input_dataset, debug=False):
 def charge_to_energy(charge):
 
     """
-    Convert collected charge into deposited energy.
-
-    Calibration copied directly from the notebook.
+    Convert collected charge (ke-) into deposited energy.
     """
 
     return (np.asarray(charge)*1000*23.6/0.57523585/1e6)
@@ -740,7 +738,7 @@ def source_nosource_comparison(
         linestyle='none',
         color='black',
         marker='.',
-        label='Source Data (Stat Errors Only) - All Prompt Sandbox (0.98 hrs)',
+        label='Source Data (Stat Errors Only) \n- All Prompt Sandbox (0.98 hrs)',
     )
 
     a0.hist(
@@ -791,6 +789,8 @@ def source_nosource_comparison(
     a1.set_xlabel('Energy of Clusters (MeV)', fontsize=20)
     a1.set_ylabel('Subtracted Count/s', fontsize=20)
 
+    a0.set_title('Minimum Cluster Size = 6')
+
     #a0.text(
     #    3.8,
     #    0.19,
@@ -813,8 +813,8 @@ def source_nosource_comparison(
     a0.grid(True)
     a1.grid(True)
 
-    a0.legend(fontsize=10)
-    a1.legend(fontsize=10)
+    a0.legend(fontsize=20)
+    a1.legend(fontsize=20)
 
     plt.tight_layout()
 
@@ -887,6 +887,7 @@ def main():
         debug=args.debug,
     )
 
+    print(f"No Source Runtime: {nosource_runtime}")
     # FIXME: Temporarily change this to a known value for all prompt trigger data
 
     source_runtime = 3521.0

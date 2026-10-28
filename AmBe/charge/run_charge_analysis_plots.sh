@@ -26,7 +26,7 @@ OUTPUT_DIR="/pscratch/sd/e/edgarmao/AmBe_analysis_outputs/"
 DEBUG=false
 
 # Cluster quality cuts: (min_hits, min_energy [MeV], max_energy [MeV])
-CLUSTER_MIN_HITS=3
+CLUSTER_MIN_HITS=4
 CLUSTER_MIN_ENERGY=0.0
 CLUSTER_MAX_ENERGY=None
 

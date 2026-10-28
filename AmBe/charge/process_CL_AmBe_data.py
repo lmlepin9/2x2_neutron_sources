@@ -2,7 +2,8 @@ import numpy as np
 import os, sys
 import pandas as pd
 import argparse
-import h5flow 
+import h5flow
+import traceback
 
 # Path to repo root (two directories above notebook)
 light_root = os.path.abspath(f"{os.environ['REPO_DIR']}/AmBe")
@@ -40,6 +41,12 @@ def CL_AmBe_analysis(input_file, file_id, single, use_trigger, period, is_debug=
         light_events  = h5_file['light/events', trigger_ids]
         charge_events = h5_file['light/events', 'charge/events', trigger_ids]
         charge_hits   = h5_file['light/events', 'charge/events', 'charge/calib_prompt_hits', trigger_ids]
+
+        print(charge_events[1])
+        print(charge_events[1][-1])
+        print(charge_events[1]['unix_ts'])
+        print(charge_events['unix_ts'][1])
+        print(charge_events['unix_ts'][1][0])
 
         # Keep only events with at least one hit
         hit_mask = charge_events.data['nhit'][:, 0] >= 1
@@ -324,6 +331,7 @@ if __name__ == "__main__":
 
         except Exception as e:
             print(f"[WARNING] Failed processing {input_file}: {e}")
+            traceback.print_exc()
             continue
 
     # ---------------- Write combined outputs ----------------
